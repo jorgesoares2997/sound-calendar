@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '@/store/useStore';
 import { useToast } from '@/hooks/useToast';
+import { getEnvConfigStatusAction } from '@/app/actions/telegram';
 import { Sidebar } from '@/components/Sidebar';
 import { Calendar } from '@/components/Calendar';
 import { Members } from '@/components/Members';
@@ -19,7 +20,12 @@ const PAGE_TITLES: Record<Page, string> = {
 export function AppShell() {
   const [page, setPage] = useState<Page>('calendar');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [envStatus, setEnvStatus] = useState<{ hasToken: boolean; hasChatId: boolean } | null>(null);
   const { toasts, toast } = useToast();
+
+  useEffect(() => {
+    getEnvConfigStatusAction().then(setEnvStatus);
+  }, []);
 
   const {
     members, shifts, settings, setSettings,
@@ -62,7 +68,7 @@ export function AppShell() {
           </div>
 
           <div className="flex items-center gap-2">
-            {!settings.botToken ? (
+            {!settings.botToken && !envStatus?.hasToken ? (
               <button
                 id="topbar-setup-telegram"
                 onClick={() => setPage('settings')}

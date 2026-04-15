@@ -1,7 +1,5 @@
-// telegram.ts — Telegram Bot API integration
 import type { Member, Shift } from '@/types';
-
-const TELEGRAM_API = 'https://api.telegram.org/bot';
+import { sendTelegramMessageAction, validateBotTokenAction } from '@/app/actions/telegram';
 
 export interface TelegramResult {
   ok: boolean;
@@ -20,33 +18,17 @@ export async function sendTelegramMessage(
   chatId: string,
   text: string,
 ): Promise<TelegramResult> {
-  if (!botToken || !chatId) {
-    return { ok: false, error: 'Token do bot ou Chat ID não configurados. Acesse Configurações.' };
-  }
-  try {
-    const res = await fetch(`${TELEGRAM_API}${botToken}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown' }),
-    });
-    const data = await res.json();
-    if (!data.ok) return { ok: false, error: data.description ?? 'Erro desconhecido' };
-    return { ok: true };
-  } catch (err: unknown) {
-    return { ok: false, error: `Erro de rede: ${(err as Error).message}` };
-  }
+  // Now calls the Server Action!
+  // We pass the token/chatId as overrides if they are provided from the UI
+  // If they are empty, the Server Action will automatically use .env values
+  return await sendTelegramMessageAction(text, { 
+    botToken: botToken || undefined, 
+    chatId: chatId || undefined 
+  });
 }
 
 export async function validateBotToken(botToken: string): Promise<BotInfo> {
-  if (!botToken) return { ok: false, error: 'Token vazio' };
-  try {
-    const res = await fetch(`${TELEGRAM_API}${botToken}/getMe`);
-    const data = await res.json();
-    if (data.ok) return { ok: true, botName: data.result.first_name, username: data.result.username };
-    return { ok: false, error: data.description };
-  } catch (err: unknown) {
-    return { ok: false, error: (err as Error).message };
-  }
+  return await validateBotTokenAction(botToken);
 }
 
 export function buildReminderMessage(template: string, member: Member, shift: Shift): string {

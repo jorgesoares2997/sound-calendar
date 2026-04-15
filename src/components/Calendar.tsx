@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { Shift, Member, AppSettings, ShiftType } from '@/types';
 import { buildReminderMessage, sendTelegramMessage } from '@/utils/telegram';
+import { getEnvConfigStatusAction } from '@/app/actions/telegram';
 
 const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const MONTHS = [
@@ -52,6 +53,11 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [sendingId, setSendingId] = useState<string | null>(null);
+  const [envStatus, setEnvStatus] = useState<{ hasToken: boolean; hasChatId: boolean } | null>(null);
+
+  useEffect(() => {
+    getEnvConfigStatusAction().then(setEnvStatus);
+  }, []);
 
   const todayStr = toISODate(today.getFullYear(), today.getMonth(), today.getDate());
 
@@ -90,8 +96,10 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
     shifts.filter((s) => s.date === toISODate(viewYear, viewMonth, day));
 
   const handleSendReminder = async (shift: Shift) => {
-    if (!settings.botToken || !settings.groupChatId) {
-      toast.error('Configure o bot e Chat ID em Configurações primeiro.');
+    const isConfigured = (settings.botToken && settings.groupChatId) || (envStatus?.hasToken && envStatus?.hasChatId);
+    
+    if (!isConfigured) {
+      toast.error('Configure o bot e Chat ID em Configurações ou no servidor (.env) primeiro.');
       return;
     }
     const assigned = shift.memberIds.map((id) => members.find((m) => m.id === id)).filter(Boolean) as Member[];

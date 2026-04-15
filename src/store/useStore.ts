@@ -26,7 +26,7 @@ const DEFAULT_MEMBERS: Member[] = [
 const DEFAULT_SETTINGS: AppSettings = {
   botToken: '',
   groupChatId: '',
-  teamName: 'Sound Team',
+  teamName: process.env.NEXT_PUBLIC_TEAM_NAME || 'Sound Team',
   reminderMessage:
     '🎛️ Lembrete de escala!\n\n{member} você está na escala de *{date}* ({shift}).\n\nFique atento ao horário! 🙏',
   defaultReminderHours: 24,

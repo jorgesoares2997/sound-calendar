@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { AppSettings } from '@/types';
-import { validateBotToken } from '@/utils/telegram';
+import { validateBotToken, sendTelegramMessage } from '@/utils/telegram';
+import { getEnvConfigStatusAction } from '@/app/actions/telegram';
 
 interface SettingsProps {
   settings: AppSettings;
@@ -15,6 +16,13 @@ export function Settings({ settings, onSave, toast }: SettingsProps) {
   const [validating, setValidating] = useState(false);
   const [botName, setBotName] = useState<string | null>(null);
   const [showToken, setShowToken] = useState(false);
+  const [envStatus, setEnvStatus] = useState<{ hasToken: boolean; hasChatId: boolean; teamName: string | null } | null>(null);
+  const [testMessage, setTestMessage] = useState('🧪 Mensagem de teste do Sound Calendar!');
+  const [sendingTest, setSendingTest] = useState(false);
+
+  useEffect(() => {
+    getEnvConfigStatusAction().then(setEnvStatus);
+  }, []);
 
   const set = <K extends keyof AppSettings>(k: K, v: AppSettings[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
@@ -29,6 +37,18 @@ export function Settings({ settings, onSave, toast }: SettingsProps) {
 
   const handleSave = () => { onSave(form); toast.success('Configurações salvas! ✅'); };
   const handleReset = () => { setForm({ ...settings }); setBotName(null); };
+
+  const handleSendTest = async () => {
+    if (!testMessage.trim()) return;
+    setSendingTest(true);
+    
+    // Correct way:
+    const result = await sendTelegramMessage(form.botToken, form.groupChatId, testMessage);
+    setSendingTest(false);
+    
+    if (result.ok) toast.success('Mensagem de teste enviada! ✅');
+    else toast.error(`Erro ao enviar teste: ${result.error}`);
+  };
 
   const previewMsg = form.reminderMessage
     .replace('{member}', '*Jorge Soares*')
@@ -129,8 +149,8 @@ export function Settings({ settings, onSave, toast }: SettingsProps) {
             <div className="bg-[#111219] border border-white/[0.06] rounded-xl p-4">
               <div className="text-xs font-bold text-[#5a5f75] uppercase tracking-widest mb-3">Status da Integração</div>
               <div className="flex flex-col gap-2">
-                <StatusRow label="Bot Token" ok={!!form.botToken} />
-                <StatusRow label="Chat ID" ok={!!form.groupChatId} />
+                <StatusRow label="Bot Token" ok={!!form.botToken || !!envStatus?.hasToken} isEnv={!!envStatus?.hasToken && !form.botToken} />
+                <StatusRow label="Chat ID" ok={!!form.groupChatId || !!envStatus?.hasChatId} isEnv={!!envStatus?.hasChatId && !form.groupChatId} />
               </div>
             </div>
           </div>
@@ -175,6 +195,44 @@ export function Settings({ settings, onSave, toast }: SettingsProps) {
             </div>
           </div>
         </div>
+
+        {/* ─── Test Sending ─── */}
+        <div className="bg-[#161821] border border-white/[0.06] rounded-2xl overflow-hidden lg:col-span-2">
+          <div className="flex items-center gap-3.5 px-6 py-4 bg-white/[0.02] border-b border-white/[0.06]">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/25 flex items-center justify-center text-xl">🧪</div>
+            <div>
+              <div className="text-sm font-bold text-[#f0f1f6]">Testar Envio</div>
+              <div className="text-xs text-[#5a5f75]">Envie uma mensagem manual para verificar a conexão</div>
+            </div>
+          </div>
+
+          <div className="p-6 flex flex-col gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-end">
+              <Field label="Mensagem de Teste">
+                <input 
+                  id="test-message-input"
+                  className={inputCls} 
+                  placeholder="Digite algo para testar..." 
+                  value={testMessage}
+                  onChange={(e) => setTestMessage(e.target.value)}
+                />
+              </Field>
+              <button 
+                id="btn-send-test"
+                onClick={handleSendTest}
+                disabled={sendingTest || !testMessage.trim()}
+                className="px-6 py-2.5 rounded-xl text-sm font-bold bg-[#229ED9] text-white shadow-lg shadow-[#229ED9]/20 hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 h-[42px]"
+              >
+                {sendingTest ? '⏳ Enviando...' : '✈️ Enviar Teste'}
+              </button>
+            </div>
+            {(!form.botToken && !envStatus?.hasToken) && (
+              <p className="text-[11px] text-amber-500 font-medium">
+                ⚠️ O bot não está configurado. O envio irá falhar.
+              </p>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Save bar */}
@@ -204,12 +262,12 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function StatusRow({ label, ok }: { label: string; ok: boolean }) {
+function StatusRow({ label, ok, isEnv }: { label: string; ok: boolean; isEnv?: boolean }) {
   return (
     <div className="flex items-center justify-between">
       <span className="text-xs text-[#9296ab]">{label}</span>
       <span className={`text-xs font-bold flex items-center gap-1 ${ok ? 'text-[#22c55e]' : 'text-[#5a5f75]'}`}>
-        {ok ? '✅ Configurado' : '⚠️ Não configurado'}
+        {ok ? (isEnv ? '✅ via .env' : '✅ Configurado') : '⚠️ Não configurado'}
       </span>
     </div>
   );
