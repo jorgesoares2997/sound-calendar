@@ -8,6 +8,10 @@ import {
   getNotificationDraftAction,
   type SummaryType
 } from '@/app/actions/notifications';
+import { useAppStore } from '@/components/Providers';
+import { ShiftCard } from './ShiftCard';
+import { AddShiftModal } from './AddShiftModal';
+import type { Shift } from '@/types';
 
 interface AutomationProps {
   toast: { success: (m: string) => void; error: (m: string) => void };
@@ -16,6 +20,9 @@ interface AutomationProps {
 export function Automation({ toast }: AutomationProps) {
   const [loading, setLoading] = useState<string | null>(null);
   const [preview, setPreview] = useState<{ type: string; content: string } | null>(null);
+  const [editingShift, setEditingShift] = useState<Shift | null>(null);
+
+  const { shifts, members, deleteShift, clearAllShifts, updateShift } = useAppStore();
 
   const handleNotify = async (type: SummaryType, action: () => Promise<any>) => {
     setLoading(type);
@@ -39,14 +46,24 @@ export function Automation({ toast }: AutomationProps) {
     }
   };
 
+  const sortedShifts = [...shifts].sort((a, b) => a.date.localeCompare(b.date));
+
   return (
-    <div className="flex flex-col gap-6 sm:gap-8 w-full max-w-4xl mx-auto">
+    <div className="flex flex-col gap-6 sm:gap-8 w-full max-w-4xl mx-auto pb-10">
       {/* Header */}
-      <div className="px-1">
-        <h1 className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-white to-purple-400 bg-clip-text text-transparent leading-tight">
-          🤖 Automações de Notificação
-        </h1>
-        <p className="text-sm text-[#5a5f75] mt-1 pr-4">Resumos via Telegram e E-mail para toda a equipe</p>
+      <div className="px-1 flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-white to-purple-400 bg-clip-text text-transparent leading-tight">
+            🤖 Automações de Notificação
+          </h1>
+          <p className="text-sm text-[#5a5f75] mt-1 pr-4">Resumos via Telegram e E-mail para toda a equipe</p>
+        </div>
+        <button 
+          onClick={clearAllShifts}
+          className="px-4 py-2 rounded-xl text-xs font-bold bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-all flex items-center gap-2"
+        >
+          🗑️ Limpar Todas as Escalas
+        </button>
       </div>
 
       {/* Cards Grid */}
@@ -83,6 +100,34 @@ export function Automation({ toast }: AutomationProps) {
         />
       </div>
 
+      {/* List of Shifts for quick edit/delete */}
+      <div className="mt-4 px-1">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-bold text-white flex items-center gap-2">
+            📋 Gerenciar Escalas Existentes
+          </h3>
+          <span className="text-[10px] text-[#5a5f75] font-mono">{shifts.length} escalas no total</span>
+        </div>
+
+        {shifts.length === 0 ? (
+          <div className="bg-[#161821] border border-dashed border-white/10 rounded-2xl p-10 text-center">
+            <p className="text-sm text-[#5a5f75]">Nenhuma escala encontrada. Gere-as no menu lateral.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {sortedShifts.map(shift => (
+              <ShiftCard 
+                key={shift.id}
+                shift={shift}
+                members={members}
+                onDelete={() => deleteShift(shift.id)}
+                onEdit={() => setEditingShift(shift)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Info Box */}
       <div className="bg-[#161821] border border-white/[0.06] rounded-2xl p-5 sm:p-6 space-y-4 mx-1">
         <h3 className="text-sm font-bold text-[#f0f1f6] flex items-center gap-2">
@@ -90,7 +135,7 @@ export function Automation({ toast }: AutomationProps) {
         </h3>
         <div className="text-xs text-[#9296ab] space-y-3 leading-relaxed">
           <p>
-            As mensagens agora são enviadas tanto para o **Telegram** do grupo quanto para o **E-mail** individual de cada técnico escalado.
+            As mensagens agora são enviadas tanto para o **Telegram** do grupo quanto para o **E-mail** individual de cada técnico escalado. Para automação real, use o comando curl abaixo em um serviço de Cron.
           </p>
           <div className="bg-[#0a0b0f] p-4 rounded-xl font-mono text-purple-300 overflow-x-auto whitespace-pre text-[10px] sm:text-xs">
 {`# Exemplo de Cron (Segunda às 08:00)
@@ -98,6 +143,21 @@ curl -X POST https://seu-app.com/api/notify/weekly`}
           </div>
         </div>
       </div>
+
+      {/* Edit Modal */}
+      {editingShift && (
+        <AddShiftModal 
+          date={editingShift.date}
+          members={members}
+          onClose={() => setEditingShift(null)}
+          onSave={(data) => {
+            updateShift(editingShift.id, data);
+            setEditingShift(null);
+            toast.success('Escala atualizada! ✅');
+          }}
+          initialData={editingShift}
+        />
+      )}
 
       {/* Preview Modal */}
       {preview && (

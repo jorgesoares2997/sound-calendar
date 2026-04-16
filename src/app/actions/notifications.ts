@@ -7,6 +7,7 @@ import initialMembers from '@/data/members.json';
 import { format, parseISO, isSameDay, isWithinInterval, startOfWeek, endOfWeek } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { Member, Shift } from '@/types';
+import { logger } from '@/utils/logger';
 
 const members = initialMembers as Member[];
 
@@ -18,14 +19,12 @@ function getMemberInfo(ids: string[], useTags = false) {
     if (!m) return 'Desconhecido';
     
     if (useTags && m.telegramId) {
-      const handle = m.telegramId.startsWith('@') ? m.telegramId : `@${m.telegramId}`;
-      return handle;
+      return m.telegramId;
     }
     return m.name;
   }).join(', ');
 }
 
-// Helper to get email addresses for a list of shifted members
 function getMemberEmails(shifts: Shift[]) {
   const memberIds = new Set<string>();
   shifts.forEach(s => s.memberIds.forEach(id => memberIds.add(id)));
@@ -39,6 +38,7 @@ export type SummaryType = 'monthly' | 'weekly' | 'daily';
 
 export async function getNotificationDraftAction(type: SummaryType): Promise<{ success: boolean; draft?: string; error?: string; emails?: string[] }> {
   try {
+    logger.info(`Generating notification draft for type: ${type}`);
     const shifts = await getShiftsAction();
     const now = new Date();
     let message = '';
@@ -50,7 +50,10 @@ export async function getNotificationDraftAction(type: SummaryType): Promise<{ s
         return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
       }).sort((a, b) => a.date.localeCompare(b.date));
 
-      if (targetShifts.length === 0) return { success: false, error: 'Nenhuma escala encontrada para este mês.' };
+      if (targetShifts.length === 0) {
+        logger.warn('No shifts found for monthly summary.');
+        return { success: false, error: 'Nenhuma escala encontrada para este mês.' };
+      }
 
       message = '📅 *ESCALA MENSAL - ' + format(now, 'MMMM/yyyy', { locale: ptBR }).toUpperCase() + '*\n\n';
       targetShifts.forEach(s => {
@@ -67,7 +70,10 @@ export async function getNotificationDraftAction(type: SummaryType): Promise<{ s
         return isWithinInterval(d, { start, end });
       }).sort((a, b) => a.date.localeCompare(b.date));
 
-      if (targetShifts.length === 0) return { success: false, error: 'Nenhuma escala encontrada para esta semana.' };
+      if (targetShifts.length === 0) {
+        logger.warn('No shifts found for weekly summary.');
+        return { success: false, error: 'Nenhuma escala encontrada para esta semana.' };
+      }
 
       message = '🗓️ *ESCALA DA SEMANA (' + format(start, 'dd/MM') + ' a ' + format(end, 'dd/MM') + ')*\n\n';
       targetShifts.forEach(s => {
@@ -77,7 +83,10 @@ export async function getNotificationDraftAction(type: SummaryType): Promise<{ s
     } 
     else if (type === 'daily') {
       targetShifts = shifts.filter(s => isSameDay(parseISO(s.date), now));
-      if (targetShifts.length === 0) return { success: false, error: 'Hoje não há escalas programadas.' };
+      if (targetShifts.length === 0) {
+        logger.warn('No shifts found for daily summary.');
+        return { success: false, error: 'Hoje não há escalas programadas.' };
+      }
 
       message = '🔔 *ESCALA DE HOJE (' + format(now, 'dd/MM', { locale: ptBR }) + ')*\n\n';
       targetShifts.forEach(s => {
@@ -87,38 +96,55 @@ export async function getNotificationDraftAction(type: SummaryType): Promise<{ s
       });
     }
 
+    logger.info(`Successfully generated draft for ${type}.`);
     return { 
       success: true, 
       draft: message,
       emails: getMemberEmails(targetShifts)
     };
   } catch (error) {
+    logger.error(`Error in getNotificationDraftAction (${type})`, error);
     return { success: false, error: (error as Error).message };
   }
 }
 
 async function sendToAll(draft: string, emails: string[], subject: string) {
-  // 1. Send to Telegram
-  const telRes = await sendTelegramMessageAction(draft);
-  
-  // 2. Send to Emails
-  let emailSuccess = 0;
-  for (const email of emails) {
-    const res = await sendEmailAction({
-      to: email,
-      subject,
-      text: draft.replace(/\*/g, ''), // Strip markdown bold for plain text email
-    });
-    if (res.success) emailSuccess++;
-  }
+  try {
+    logger.info(`Starting broadcast to Telegram and ${emails.length} emails. Subject: ${subject}`);
+    
+    // 1. Send to Telegram
+    const telRes = await sendTelegramMessageAction(draft);
+    if (!telRes.ok) {
+      logger.error('Telegram broadcast failed', telRes.error);
+    } else {
+      logger.info('Telegram broadcast successful.');
+    }
+    
+    // 2. Send to Emails
+    let emailSuccess = 0;
+    for (const email of emails) {
+      const res = await sendEmailAction({
+        to: email,
+        subject,
+        text: draft.replace(/\*/g, ''), // Strip markdown bold for plain text email
+      });
+      if (res.success) emailSuccess++;
+      else logger.error(`Email delivery failed to ${email}`, res.error);
+    }
 
-  return { 
-    success: telRes.ok, 
-    telegram: telRes.ok,
-    emailsSent: emailSuccess,
-    totalEmails: emails.length,
-    error: telRes.error 
-  };
+    logger.info(`Broadcast finished. Telegram: ${telRes.ok ? 'OK' : 'FAIL'}, Emails: ${emailSuccess}/${emails.length}`);
+
+    return { 
+      success: telRes.ok, 
+      telegram: telRes.ok,
+      emailsSent: emailSuccess,
+      totalEmails: emails.length,
+      error: telRes.error 
+    };
+  } catch (error) {
+    logger.error('Error in sendToAll broadcast', error);
+    throw error;
+  }
 }
 
 export async function sendMonthlySummaryAction() {

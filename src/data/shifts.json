@@ -1,1 +1,15 @@
-[]
+[
+  {
+    "date": "2026-04-16",
+    "title": "Nova Escala",
+    "type": "culto",
+    "startTime": "19:30",
+    "endTime": "21:30",
+    "memberIds": [
+      "1"
+    ],
+    "notes": "",
+    "id": "4435f347-5237-42a4-be17-2f21aad3af09",
+    "createdAt": "2026-04-16T18:03:24.275Z"
+  }
+]

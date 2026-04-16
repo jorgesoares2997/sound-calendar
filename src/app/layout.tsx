@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import { StoreProvider } from '@/components/Providers';
+import { MainLayout } from '@/components/MainLayout';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -25,7 +27,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body className="bg-[#0a0b0f] text-[#f0f1f6] antialiased min-h-screen">{children}</body>
+      <body className="bg-[#0a0b0f] text-[#f0f1f6] antialiased min-h-screen">
+        <StoreProvider>
+          <MainLayout>
+            {children}
+          </MainLayout>
+        </StoreProvider>
+      </body>
     </html>
   );
 }

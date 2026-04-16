@@ -1,28 +1,24 @@
 'use client';
 
-import type { Page } from '@/types';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
-const NAV_ITEMS: { id: Page; label: string; icon: string }[] = [
-  { id: 'calendar', label: 'Calendário', icon: '📅' },
-  { id: 'scale-creator', label: 'Gerar Escalas', icon: '🪄' },
-  { id: 'automation', label: 'Automações', icon: '🤖' },
-  { id: 'members', label: 'Membros', icon: '👥' },
-  { id: 'settings', label: 'Configurações', icon: '⚙️' },
+const NAV_ITEMS = [
+  { id: 'calendar', label: 'Calendário', icon: '📅', href: '/' },
+  { id: 'scale-creator', label: 'Gerar Escalas', icon: '🪄', href: '/gerar-escalas' },
+  { id: 'automation', label: 'Automações', icon: '🤖', href: '/automacao' },
+  { id: 'members', label: 'Membros', icon: '👥', href: '/equipe' },
+  { id: 'settings', label: 'Configurações', icon: '⚙️', href: '/configuracoes' },
 ];
 
 interface SidebarProps {
-  activePage: Page;
-  onNavigate: (page: Page) => void;
   teamName: string;
   isOpen: boolean;
   onClose: () => void;
 }
 
-export function Sidebar({ activePage, onNavigate, teamName, isOpen, onClose }: SidebarProps) {
-  const handleNavigate = (page: Page) => {
-    onNavigate(page);
-    onClose();
-  };
+export function Sidebar({ teamName, isOpen, onClose }: SidebarProps) {
+  const pathname = usePathname();
 
   return (
     <>
@@ -57,26 +53,29 @@ export function Sidebar({ activePage, onNavigate, teamName, isOpen, onClose }: S
 
         {/* Nav */}
         <nav className="flex-1 flex flex-col gap-1 px-3 pt-4">
-          {NAV_ITEMS.map((item) => (
-            <button
-              key={item.id}
-              id={`nav-${item.id}`}
-              onClick={() => handleNavigate(item.id)}
-              className={`
-                flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium
-                transition-all duration-200 w-full text-left relative
-                ${activePage === item.id
-                  ? 'bg-violet-600/15 text-purple-400'
-                  : 'text-[#9296ab] hover:bg-white/[0.04] hover:text-[#f0f1f6]'}
-              `}
-            >
-              <span className="text-lg w-6 text-center flex-shrink-0">{item.icon}</span>
-              <span className="flex-1">{item.label}</span>
-              {activePage === item.id && (
-                <span className="w-1.5 h-1.5 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.8)]" />
-              )}
-            </button>
-          ))}
+          {NAV_ITEMS.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.id}
+                href={item.href}
+                onClick={onClose}
+                className={`
+                  flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium
+                  transition-all duration-200 w-full text-left relative
+                  ${isActive
+                    ? 'bg-violet-600/15 text-purple-400'
+                    : 'text-[#9296ab] hover:bg-white/[0.04] hover:text-[#f0f1f6]'}
+                `}
+              >
+                <span className="text-lg w-6 text-center flex-shrink-0">{item.icon}</span>
+                <span className="flex-1">{item.label}</span>
+                {isActive && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.8)]" />
+                )}
+              </Link>
+            );
+          })}
         </nav>
 
         {/* Footer */}

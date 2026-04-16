@@ -150,6 +150,12 @@ export function useStore() {
     [setShifts],
   );
 
+  const clearAllShifts = useCallback(() => {
+    if (confirm('Tem certeza que deseja apagar TODAS as escalas? Esta ação não pode ser desfeita.')) {
+      setShifts([]);
+    }
+  }, [setShifts]);
+
   return {
     members,
     shifts,
@@ -161,6 +167,7 @@ export function useStore() {
     addShift,
     addShifts,
     syncMonthShifts,
+    clearAllShifts,
     updateShift,
     deleteShift,
   };
