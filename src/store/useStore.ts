@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { Member, Shift, AppSettings } from '@/types';
+import initialMembers from '@/data/members.json';
+import { getShiftsAction, saveShiftsAction } from '@/app/actions/shifts';
 
 const KEYS = { MEMBERS: 'sc_members', SHIFTS: 'sc_shifts', SETTINGS: 'sc_settings' };
 
@@ -19,9 +21,8 @@ function save<T>(key: string, value: T): void {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
-const DEFAULT_MEMBERS: Member[] = [
-  { id: '1', name: 'Jorge Soares', role: 'Líder de Som', telegramId: '', color: '#7c3aed', active: true },
-];
+// Static members from JSON
+const DEFAULT_MEMBERS: Member[] = initialMembers as Member[];
 
 const DEFAULT_SETTINGS: AppSettings = {
   botToken: '',
@@ -33,26 +34,26 @@ const DEFAULT_SETTINGS: AppSettings = {
 };
 
 export function useStore() {
-  const [members, setMembersState] = useState<Member[]>(() =>
-    load(KEYS.MEMBERS, DEFAULT_MEMBERS),
-  );
-  const [shifts, setShiftsState] = useState<Shift[]>(() => load(KEYS.SHIFTS, []));
+  const [members, setMembersState] = useState<Member[]>(DEFAULT_MEMBERS);
+  const [shifts, setShiftsState] = useState<Shift[]>([]);
   const [settings, setSettingsState] = useState<AppSettings>(() =>
     load(KEYS.SETTINGS, DEFAULT_SETTINGS),
   );
 
+  // Sync with server on mount
+  useEffect(() => {
+    getShiftsAction().then(setShiftsState);
+  }, []);
+
+  // Member management is now static/JSON-based
   const setMembers = useCallback((update: Member[] | ((prev: Member[]) => Member[])) => {
-    setMembersState((prev) => {
-      const next = typeof update === 'function' ? update(prev) : update;
-      save(KEYS.MEMBERS, next);
-      return next;
-    });
+    setMembersState(update);
   }, []);
 
   const setShifts = useCallback((update: Shift[] | ((prev: Shift[]) => Shift[])) => {
     setShiftsState((prev) => {
       const next = typeof update === 'function' ? update(prev) : update;
-      save(KEYS.SHIFTS, next);
+      saveShiftsAction(next); // Persist to server
       return next;
     });
   }, []);
@@ -107,6 +108,41 @@ export function useStore() {
     [setShifts],
   );
 
+  const addShifts = useCallback(
+    (newShifts: Omit<Shift, 'id' | 'createdAt'>[]) => {
+      const shiftsWithIds: Shift[] = newShifts.map((s) => ({
+        ...s,
+        id: crypto.randomUUID(),
+        createdAt: new Date().toISOString(),
+      }));
+      setShifts((prev) => [...prev, ...shiftsWithIds]);
+      return shiftsWithIds;
+    },
+    [setShifts],
+  );
+
+  const syncMonthShifts = useCallback(
+    (targetYear: number, targetMonth: number, newShifts: Omit<Shift, 'id' | 'createdAt'>[]) => {
+      const shiftsWithIds: Shift[] = newShifts.map((s) => ({
+        ...s,
+        id: crypto.randomUUID(),
+        createdAt: new Date().toISOString(),
+      }));
+
+      setShifts((prev) => {
+        // Remove existing shifts for that month/year
+        const filtered = prev.filter((s) => {
+          const [y, m] = s.date.split('-').map(Number);
+          return !(y === targetYear && m === (targetMonth + 1));
+        });
+        return [...filtered, ...shiftsWithIds];
+      });
+
+      return shiftsWithIds;
+    },
+    [setShifts],
+  );
+
   const deleteShift = useCallback(
     (id: string) => {
       setShifts((prev) => prev.filter((s) => s.id !== id));
@@ -123,6 +159,8 @@ export function useStore() {
     updateMember,
     deleteMember,
     addShift,
+    addShifts,
+    syncMonthShifts,
     updateShift,
     deleteShift,
   };

@@ -4,6 +4,8 @@ import type { Page } from '@/types';
 
 const NAV_ITEMS: { id: Page; label: string; icon: string }[] = [
   { id: 'calendar', label: 'Calendário', icon: '📅' },
+  { id: 'scale-creator', label: 'Gerar Escalas', icon: '🪄' },
+  { id: 'automation', label: 'Automações', icon: '🤖' },
   { id: 'members', label: 'Membros', icon: '👥' },
   { id: 'settings', label: 'Configurações', icon: '⚙️' },
 ];

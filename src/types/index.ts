@@ -5,6 +5,8 @@ export interface Member {
   name: string;
   role: string;
   telegramId: string;
+  email: string;
+  phone: string;
   color: string;
   active: boolean;
 }
@@ -29,7 +31,7 @@ export interface AppSettings {
   defaultReminderHours: number;
 }
 
-export type Page = 'calendar' | 'members' | 'settings';
+export type Page = 'calendar' | 'members' | 'settings' | 'scale-creator' | 'automation';
 
 export type ToastType = 'success' | 'error' | 'info' | 'loading';
 

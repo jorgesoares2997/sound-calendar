@@ -6,6 +6,8 @@ import { useToast } from '@/hooks/useToast';
 import { getEnvConfigStatusAction } from '@/app/actions/telegram';
 import { Sidebar } from '@/components/Sidebar';
 import { Calendar } from '@/components/Calendar';
+import { ScaleCreator } from '@/components/ScaleCreator';
+import { Automation } from '@/components/Automation';
 import { Members } from '@/components/Members';
 import { Settings } from '@/components/Settings';
 import { ToastContainer } from '@/components/Toast';
@@ -13,6 +15,8 @@ import type { Page } from '@/types';
 
 const PAGE_TITLES: Record<Page, string> = {
   calendar: '📅 Calendário de Escalas',
+  'scale-creator': '🪄 Gerador de Escalas Mensal',
+  automation: '🤖 Automações de Notificação',
   members: '👥 Equipe',
   settings: '⚙️ Configurações',
 };
@@ -29,8 +33,8 @@ export function AppShell() {
 
   const {
     members, shifts, settings, setSettings,
-    addMember, updateMember, deleteMember,
-    addShift, deleteShift,
+    updateMember,
+    addShift, addShifts, syncMonthShifts, deleteShift,
   } = useStore();
 
   return (
@@ -87,18 +91,28 @@ export function AppShell() {
         </header>
 
         {/* Page content */}
-        <div className="flex-1 p-4 sm:p-6 relative z-10">
+        <div className="flex-1 p-3 sm:p-6 lg:p-8 relative z-10 transition-all">
           {page === 'calendar' && (
             <Calendar
               shifts={shifts} members={members} settings={settings}
               onAddShift={addShift} onDeleteShift={deleteShift} toast={toast}
             />
           )}
+          {page === 'scale-creator' && (
+            <ScaleCreator 
+              members={members} 
+              onSave={(newShifts, yr, mo) => syncMonthShifts(yr, mo, newShifts)} 
+              onNavigate={setPage}
+              toast={toast} 
+            />
+          )}
+          {page === 'automation' && (
+            <Automation toast={toast} />
+          )}
           {page === 'members' && (
             <Members
               members={members}
-              onAdd={addMember} onUpdate={updateMember} onDelete={deleteMember}
-              toast={toast}
+              onUpdate={updateMember}
             />
           )}
           {page === 'settings' && (

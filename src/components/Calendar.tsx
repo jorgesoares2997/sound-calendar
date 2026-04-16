@@ -137,8 +137,8 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
             </button>
           </div>
           <button id="btn-today" onClick={() => { setViewYear(today.getFullYear()); setViewMonth(today.getMonth()); setSelectedDate(todayStr); }}
-            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/[0.04] border border-white/[0.08] text-[#9296ab] hover:text-white hover:bg-white/[0.08] transition-all">
-            Hoje
+            className="px-4 py-2 rounded-xl text-xs font-black bg-white/[0.04] border border-white/[0.08] text-[#9296ab] hover:text-white hover:bg-white/[0.08] transition-all flex-1 sm:flex-none">
+            HOJE
           </button>
         </div>
 
@@ -165,20 +165,19 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
                 id={`day-${dateStr}`}
                 onClick={() => setSelectedDate(dateStr)}
                 className={`
-                  aspect-square flex flex-col items-center justify-center gap-1 rounded-xl
-                  text-xs sm:text-sm font-semibold transition-all duration-150 relative
+                  aspect-square flex flex-col items-center justify-center gap-0.5 sm:gap-1 rounded-xl sm:rounded-2xl
+                  text-sm sm:text-base font-black transition-all duration-150 relative
                   ${isToday ? 'bg-gradient-to-br from-violet-600 to-purple-500 text-white shadow-lg shadow-violet-500/30' : ''}
                   ${isSelected && !isToday ? 'bg-violet-500/10 border border-violet-500/40 text-purple-300' : ''}
                   ${!isToday && !isSelected ? 'text-[#9296ab] hover:bg-white/[0.04] hover:text-white' : ''}
                 `}
               >
-                <span>{day}</span>
+                <span className="z-10">{day}</span>
                 {dayShifts.length > 0 && (
-                  <div className="flex gap-0.5">
+                  <div className="flex gap-0.5 sm:gap-1">
                     {dayShifts.slice(0, 3).map((s) => (
                       <span key={s.id} className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full" style={{ background: getShiftMeta(s.type).color }} />
                     ))}
-                    {dayShifts.length > 3 && <span className="text-[8px] text-[#5a5f75]">+</span>}
                   </div>
                 )}
               </button>

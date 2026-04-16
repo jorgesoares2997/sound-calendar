@@ -1,0 +1,52 @@
+[
+  {
+    "id": "1",
+    "name": "Jorge Soares",
+    "role": "Líder de Som",
+    "telegramId": "@jorgesoares",
+    "email": "jorge@example.com",
+    "phone": "+55 11 99999-9999",
+    "color": "#7c3aed",
+    "active": true
+  },
+  {
+    "id": "2",
+    "name": "Laís Vitória",
+    "role": "Técnico Senior",
+    "telegramId": "@laisvitoria890",
+    "email": "laisv940@gmail.com",
+    "phone": "+81 99332-3696",
+    "color": "#22c55e",
+    "active": true
+  },
+  {
+    "id": "3",
+    "name": "Vitor Cajueirinho",
+    "role": "Técnico Pleno",
+    "telegramId": "@vitorcajueirinho",
+    "email": "brvictor556@gmail.com",
+    "phone": "+55 81 98754-8374",
+    "color": "#22c55e",
+    "active": true
+  },
+  {
+    "id": "4",
+    "name": "Ihago",
+    "role": "Técnico Pleno",
+    "telegramId": "@ihagom",
+    "email": "ihagoluissilva@gmail.com",
+    "phone": "+55 81 99697-7614",
+    "color": "#22c55e",
+    "active": true
+  },
+  {
+    "id": "5",
+    "name": "Matheus Eliaquim",
+    "role": "Técnico Senior ",
+    "telegramId": "@",
+    "email": "matheuswesley31@gmail.com",
+    "phone": "+55 81 99543-3971",
+    "color": "#22c55e",
+    "active": true
+  }
+]
