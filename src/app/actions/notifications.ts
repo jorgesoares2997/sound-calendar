@@ -10,6 +10,15 @@ import type { Member, Shift } from '@/types';
 import { logger } from '@/utils/logger';
 
 const members = initialMembers as Member[];
+const ESCAPE_MAP: Record<string, string> = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+};
+
+function escapeHTML(str: string): string {
+  return str.replace(/[&<>]/g, (tag) => ESCAPE_MAP[tag] || tag);
+}
 
 function getMemberInfo(ids: string[], useTags = false) {
   if (ids.length === 0) return 'Ninguém escalado';
@@ -18,10 +27,12 @@ function getMemberInfo(ids: string[], useTags = false) {
     const m = members.find(m => m.id === id);
     if (!m) return 'Desconhecido';
     
+    // Always escape names and telegram IDs for HTML safety
+    const safeName = escapeHTML(m.name);
     if (useTags && m.telegramId) {
-      return m.telegramId;
+      return `<code>@${escapeHTML(m.telegramId.replace('@', ''))}</code>`;
     }
-    return m.name;
+    return safeName;
   }).join(', ');
 }
 
@@ -55,10 +66,10 @@ export async function getNotificationDraftAction(type: SummaryType): Promise<{ s
         return { success: false, error: 'Nenhuma escala encontrada para este mês.' };
       }
 
-      message = '📅 *ESCALA MENSAL - ' + format(now, 'MMMM/yyyy', { locale: ptBR }).toUpperCase() + '*\n\n';
+      message = '📅 <b>ESCALA MENSAL - ' + escapeHTML(format(now, 'MMMM/yyyy', { locale: ptBR }).toUpperCase()) + '</b>\n\n';
       targetShifts.forEach(s => {
         const date = format(parseISO(s.date), "dd/MM ' ('eee')'", { locale: ptBR });
-        message += '• ' + date + ': ' + s.startTime + ' - *' + getMemberInfo(s.memberIds, true) + '* (' + s.title + ')\n';
+        message += '• ' + date + ': ' + s.startTime + ' - <b>' + getMemberInfo(s.memberIds, true) + '</b> (' + escapeHTML(s.title) + ')\n';
       });
     } 
     else if (type === 'weekly') {
@@ -75,10 +86,10 @@ export async function getNotificationDraftAction(type: SummaryType): Promise<{ s
         return { success: false, error: 'Nenhuma escala encontrada para esta semana.' };
       }
 
-      message = '🗓️ *ESCALA DA SEMANA (' + format(start, 'dd/MM') + ' a ' + format(end, 'dd/MM') + ')*\n\n';
+      message = '🗓️ <b>ESCALA DA SEMANA (' + format(start, 'dd/MM') + ' a ' + format(end, 'dd/MM') + ')</b>\n\n';
       targetShifts.forEach(s => {
         const date = format(parseISO(s.date), "dd/MM ' ('eee')'", { locale: ptBR });
-        message += '• ' + date + ': ' + s.startTime + ' - *' + getMemberInfo(s.memberIds, true) + '*\n';
+        message += '• ' + date + ': ' + s.startTime + ' - <b>' + getMemberInfo(s.memberIds, true) + '</b>\n';
       });
     } 
     else if (type === 'daily') {
@@ -88,11 +99,11 @@ export async function getNotificationDraftAction(type: SummaryType): Promise<{ s
         return { success: false, error: 'Hoje não há escalas programadas.' };
       }
 
-      message = '🔔 *ESCALA DE HOJE (' + format(now, 'dd/MM', { locale: ptBR }) + ')*\n\n';
+      message = '🔔 <b>ESCALA DE HOJE (' + format(now, 'dd/MM', { locale: ptBR }) + ')</b>\n\n';
       targetShifts.forEach(s => {
         message += '⏰ ' + s.startTime + '\n';
-        message += '📍 ' + s.title + '\n';
-        message += '👤 Técnico: *' + getMemberInfo(s.memberIds, true) + '*\n\n';
+        message += '📍 ' + escapeHTML(s.title) + '\n';
+        message += '👤 Técnico: <b>' + getMemberInfo(s.memberIds, true) + '</b>\n\n';
       });
     }
 
@@ -126,7 +137,7 @@ async function sendToAll(draft: string, emails: string[], subject: string) {
       const res = await sendEmailAction({
         to: email,
         subject,
-        text: draft.replace(/\*/g, ''), // Strip markdown bold for plain text email
+        text: draft.replace(/<[^>]*>/g, ''), // Strip all HTML tags for plain text email
       });
       if (res.success) emailSuccess++;
       else logger.error(`Email delivery failed to ${email}`, res.error);

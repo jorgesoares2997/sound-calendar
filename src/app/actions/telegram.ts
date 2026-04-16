@@ -23,10 +23,13 @@ export async function sendTelegramMessageAction(
     const res = await fetch(`${TELEGRAM_API}${token}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown' }),
+      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
     });
     const data = await res.json();
-    if (!data.ok) return { ok: false, error: data.description ?? 'Erro desconhecido' };
+    if (!data.ok) {
+      console.error('Telegram API Error:', data);
+      return { ok: false, error: `Telegram: ${data.description || 'Erro desconhecido'}` };
+    }
     return { ok: true };
   } catch (err: unknown) {
     return { ok: false, error: `Erro no servidor: ${(err as Error).message}` };
