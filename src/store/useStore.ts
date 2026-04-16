@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import type { Member, Shift, AppSettings } from '@/types';
 import initialMembers from '@/data/members.json';
 import { getShiftsAction, saveShiftsAction } from '@/app/actions/shifts';
+import { logger } from '@/utils/logger';
 
 const KEYS = { MEMBERS: 'sc_members', SHIFTS: 'sc_shifts', SETTINGS: 'sc_settings' };
 
@@ -45,6 +46,13 @@ export function useStore() {
     getShiftsAction().then(setShiftsState);
   }, []);
 
+  // Persistence Effect
+  useEffect(() => {
+    if (shifts.length > 0 || initialMembers.length === 0) { // Avoid saving empty initial state if not intended
+       saveShiftsAction(shifts).catch(e => logger.error('useStore: Erro ao persistir escalas', e));
+    }
+  }, [shifts]);
+
   // Member management is now static/JSON-based
   const setMembers = useCallback((update: Member[] | ((prev: Member[]) => Member[])) => {
     setMembersState(update);
@@ -53,7 +61,6 @@ export function useStore() {
   const setShifts = useCallback((update: Shift[] | ((prev: Shift[]) => Shift[])) => {
     setShiftsState((prev) => {
       const next = typeof update === 'function' ? update(prev) : update;
-      saveShiftsAction(next); // Persist to server
       return next;
     });
   }, []);
@@ -95,7 +102,13 @@ export function useStore() {
   const addShift = useCallback(
     (shift: Omit<Shift, 'id' | 'createdAt'>) => {
       const newShift: Shift = { ...shift, id: crypto.randomUUID(), createdAt: new Date().toISOString() };
-      setShifts((prev) => [...prev, newShift]);
+      setShifts((prev) => {
+        // De-duplicate: Remove existing shift with same date, time, and type
+        const filtered = prev.filter(s => 
+          !(s.date === newShift.date && s.startTime === newShift.startTime && s.type === newShift.type)
+        );
+        return [...filtered, newShift];
+      });
       return newShift;
     },
     [setShifts],
@@ -115,7 +128,15 @@ export function useStore() {
         id: crypto.randomUUID(),
         createdAt: new Date().toISOString(),
       }));
-      setShifts((prev) => [...prev, ...shiftsWithIds]);
+      setShifts((prev) => {
+        // De-duplicate: filter current against incoming
+        const filtered = prev.filter(curr => 
+          !shiftsWithIds.some(next => 
+            next.date === curr.date && next.startTime === curr.startTime && next.type === curr.type
+          )
+        );
+        return [...filtered, ...shiftsWithIds];
+      });
       return shiftsWithIds;
     },
     [setShifts],

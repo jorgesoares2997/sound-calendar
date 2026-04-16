@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import type { Member, Shift, ShiftType, Page } from '@/types';
 import { generateSuggestedScales } from '@/utils/date-helpers';
 import { SHIFT_TYPES } from './Calendar';
+import { logger } from '@/utils/logger';
 
 interface ScaleCreatorProps {
   members: Member[];
@@ -17,12 +18,12 @@ export function ScaleCreator({ members, onSave, onSaveSingle, onNavigate, toast 
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
-  const [mode, setMode] = useState<'monthly' | 'isolated'>('monthly');
+  const [mode, setMode] = useState<'monthly' | 'isolated'>('isolated');
   const [draftShifts, setDraftShifts] = useState<Omit<Shift, 'id' | 'createdAt'>[]>([]);
   const [justSaved, setJustSaved] = useState(false);
 
-  // Generate defaults when mode is monthly or month change
   useEffect(() => {
+    logger.debug(`ScaleCreator: Modo alterado para ${mode}. Mês: ${month}, Ano: ${year}`);
     if (mode === 'monthly') {
       const suggestions = generateSuggestedScales(year, month).map(({ id, createdAt, ...rest }) => ({
         ...rest,
@@ -36,6 +37,7 @@ export function ScaleCreator({ members, onSave, onSaveSingle, onNavigate, toast 
   }, [year, month, mode]);
 
   const updateShift = (index: number, changes: Partial<Omit<Shift, 'id' | 'createdAt'>>) => {
+    logger.debug(`ScaleCreator: Atualizando escala no índice ${index}`, changes);
     setDraftShifts((prev) => {
       const next = [...prev];
       next[index] = { ...next[index], ...changes };
@@ -44,10 +46,12 @@ export function ScaleCreator({ members, onSave, onSaveSingle, onNavigate, toast 
   };
 
   const removeShift = (index: number) => {
+    logger.debug(`ScaleCreator: Removendo escala no índice ${index}`);
     setDraftShifts((prev) => prev.filter((_, i) => i !== index));
   };
 
   const addEmptyShift = () => {
+    logger.debug('ScaleCreator: Adicionando nova escala isolada.');
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-01`;
     setDraftShifts((prev) => [
       ...prev,
@@ -64,6 +68,7 @@ export function ScaleCreator({ members, onSave, onSaveSingle, onNavigate, toast 
   };
 
   const handleSaveAll = () => {
+    logger.info(`ScaleCreator: handleSaveAll acionado com ${draftShifts.length} escalas.`);
     if (draftShifts.length === 0) {
       toast.error('Nenhuma escala para salvar.');
       return;
@@ -75,6 +80,7 @@ export function ScaleCreator({ members, onSave, onSaveSingle, onNavigate, toast 
 
   const handleSaveSingle = (index: number) => {
     const shift = draftShifts[index];
+    logger.info(`ScaleCreator: handleSaveSingle acionado para escala no índice ${index}`, { shiftTitle: shift.title });
     if (!shift.title.trim()) {
       toast.error('A escala precisa de um título.');
       return;
@@ -106,13 +112,21 @@ export function ScaleCreator({ members, onSave, onSaveSingle, onNavigate, toast 
         
         <div className="flex items-center gap-2 bg-[#161821] p-1 rounded-xl border border-white/5">
           <button 
-            onClick={() => setMode('monthly')}
+            type="button"
+            onClick={() => {
+              logger.info('ScaleCreator: Botão "Mensal" clicado.');
+              setMode('monthly');
+            }}
             className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${mode === 'monthly' ? 'bg-violet-600 text-white shadow-lg' : 'text-[#5a5f75] hover:text-[#9296ab]'}`}
           >
             📅 Mensal
           </button>
           <button 
-            onClick={() => setMode('isolated')}
+            type="button"
+            onClick={() => {
+              logger.info('ScaleCreator: Botão "Isolada" clicado.');
+              setMode('isolated');
+            }}
             className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${mode === 'isolated' ? 'bg-violet-600 text-white shadow-lg' : 'text-[#5a5f75] hover:text-[#9296ab]'}`}
           >
             ➕ Isolada
@@ -151,7 +165,7 @@ export function ScaleCreator({ members, onSave, onSaveSingle, onNavigate, toast 
         {draftShifts.map((shift, idx) => (
           <div key={`${idx}-${shift.date}-${mode}`} className="bg-[#161821] border border-white/[0.06] rounded-2xl p-3 sm:p-4 flex gap-4 hover:border-white/10 transition-all relative group overflow-hidden">
             {/* Minimalist Date Column */}
-            <div className="flex flex-col items-center justify-center gap-0.5 border-r border-white/5 pr-4 flex-shrink-0 min-w-[60px]">
+            <div className="flex flex-col items-center justify-center gap-0.5 border-r border-white/5 pr-4 flex-shrink-0 min-w-[75px]">
               <span className="text-[10px] text-purple-400 font-extrabold uppercase tracking-tight">
                 {formatDayName(shift.date)}
               </span>
@@ -159,7 +173,7 @@ export function ScaleCreator({ members, onSave, onSaveSingle, onNavigate, toast 
                 type="number"
                 min="1"
                 max="31"
-                className="bg-transparent text-xl font-black text-[#f0f1f6] outline-none text-center w-10 hover:text-white transition-colors"
+                className="bg-transparent text-xl font-black text-[#f0f1f6] outline-none text-center w-14 hover:text-white transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 value={parseInt(shift.date.split('-')[2], 10) || 1}
                 onChange={(e) => {
                   const dayNum = parseInt(e.target.value, 10);
@@ -201,15 +215,17 @@ export function ScaleCreator({ members, onSave, onSaveSingle, onNavigate, toast 
                 </div>
                 <div className="flex items-center gap-1">
                   <button 
+                    type="button"
                     onClick={() => handleSaveSingle(idx)}
-                    className="w-7 h-7 rounded-lg text-green-500/40 hover:bg-green-500/10 hover:text-green-400 transition-all flex items-center justify-center"
+                    className="w-8 h-8 rounded-lg text-green-500/40 hover:bg-green-500/10 hover:text-green-400 transition-all flex items-center justify-center"
                     title="Salvar apenas esta escala"
                   >
                     💾
                   </button>
                   <button 
+                    type="button"
                     onClick={() => removeShift(idx)}
-                    className="w-7 h-7 rounded-lg text-red-500/30 hover:bg-red-500/10 hover:text-red-400 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100"
+                    className="w-8 h-8 rounded-lg text-red-500/30 hover:bg-red-500/10 hover:text-red-400 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100"
                     title="Remover"
                   >
                     ✕
@@ -243,7 +259,11 @@ export function ScaleCreator({ members, onSave, onSaveSingle, onNavigate, toast 
         ))}
         
         <button 
-          onClick={addEmptyShift}
+          type="button"
+          onClick={() => {
+            logger.info('ScaleCreator: Botão "Adicionar Escala" clicado.');
+            addEmptyShift();
+          }}
           className="bg-white/[0.02] border border-dashed border-white/10 rounded-2xl p-6 flex items-center justify-center gap-3 text-sm font-bold text-[#5a5f75] hover:border-white/20 hover:bg-white/[0.04] hover:text-[#9296ab] transition-all min-h-[110px]"
         >
           <span className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-lg">+</span>
@@ -260,7 +280,11 @@ export function ScaleCreator({ members, onSave, onSaveSingle, onNavigate, toast 
           <div className="flex items-center gap-3 w-full sm:w-auto">
             {justSaved && (
               <button 
-                onClick={() => onNavigate?.('automation')}
+                type="button"
+                onClick={() => {
+                  logger.info('ScaleCreator: Botão "Checar Automações" clicado.');
+                  onNavigate?.('automation');
+                }}
                 className="px-6 py-2.5 rounded-xl text-xs font-bold bg-white/5 border border-white/10 text-purple-400 hover:bg-white/10 transition-all flex-1 sm:flex-none animate-fade-in"
               >
                 🤖 Checar Automações
@@ -268,6 +292,7 @@ export function ScaleCreator({ members, onSave, onSaveSingle, onNavigate, toast 
             )}
             {mode === 'monthly' && (
               <button 
+                type="button"
                 onClick={handleSaveAll}
                 className="px-8 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-violet-600 to-purple-500 text-white shadow-xl shadow-violet-500/30 hover:brightness-110 active:scale-95 transition-all flex-1 sm:flex-none"
               >
