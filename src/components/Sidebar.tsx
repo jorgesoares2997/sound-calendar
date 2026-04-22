@@ -25,7 +25,7 @@ export function Sidebar({ teamName, isOpen, onClose }: SidebarProps) {
       {/* Mobile overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden animate-fade-in"
+          className="fixed inset-0 theme-overlay-soft backdrop-blur-sm z-40 lg:hidden animate-fade-in"
           onClick={onClose}
         />
       )}
@@ -34,7 +34,7 @@ export function Sidebar({ teamName, isOpen, onClose }: SidebarProps) {
       <aside
         className={`
           fixed top-0 left-0 bottom-0 z-50 w-72 flex flex-col
-          bg-slate-50/50 dark:bg-slate-950/50 backdrop-blur-2xl border-r border-slate-200/40 dark:border-slate-800/40
+          theme-card-solid backdrop-blur-2xl border-r theme-border
           transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]
           lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           shadow-[20px_0_40px_-15px_rgba(0,0,0,0.03)] p-6 space-y-8
@@ -46,8 +46,8 @@ export function Sidebar({ teamName, isOpen, onClose }: SidebarProps) {
             <span className="material-symbols-outlined">graphic_eq</span>
           </div>
           <div>
-            <h1 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Sound Calendar</h1>
-            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Studio_Rhythm</p>
+            <h1 className="text-lg font-bold theme-text-primary tracking-tight">Sound Calendar</h1>
+            <p className="text-[10px] font-semibold theme-text-secondary uppercase tracking-widest">Studio_Rhythm</p>
           </div>
         </div>
 
@@ -72,8 +72,8 @@ export function Sidebar({ teamName, isOpen, onClose }: SidebarProps) {
                 className={`
                   flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 scale-100 active:scale-[0.98]
                   ${isActive
-                    ? 'bg-white dark:bg-slate-900 text-accent-primary shadow-sm font-semibold'
-                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-200/30 dark:hover:bg-slate-800/30'}
+                    ? 'theme-surface text-accent-primary shadow-sm font-semibold'
+                    : 'theme-text-secondary hover:bg-[var(--color-bg-surface)]'}
                 `}
               >
                 <span 
@@ -89,12 +89,12 @@ export function Sidebar({ teamName, isOpen, onClose }: SidebarProps) {
         </nav>
 
         {/* System Info */}
-        <div className="pt-6 border-t border-slate-200/40">
-          <div className="flex items-center gap-3 px-4 py-3 text-slate-400">
+        <div className="pt-6 border-t theme-border">
+          <div className="flex items-center gap-3 px-4 py-3 theme-text-muted">
             <span className="material-symbols-outlined text-sm">database</span>
             <div className="flex flex-col">
               <span className="text-[9px] font-bold uppercase tracking-wider">Equipe_Ativa</span>
-              <span className="text-xs text-slate-600 dark:text-slate-300 font-bold truncate w-32">{teamName || 'SEM_SINAL'}</span>
+              <span className="text-xs theme-text-secondary font-bold truncate w-32">{teamName || 'SEM_SINAL'}</span>
             </div>
           </div>
         </div>

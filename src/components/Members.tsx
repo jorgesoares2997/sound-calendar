@@ -15,8 +15,8 @@ export function Members({ members, onUpdate }: MembersProps) {
     <div className="p-6 lg:p-12 max-w-7xl mx-auto animate-fade-in">
       {/* Page Header */}
       <div className="mb-12">
-        <h2 className="text-5xl font-light text-slate-900 dark:text-white tracking-tight">Diretório de Equipe</h2>
-        <p className="text-lg text-slate-500 mt-3 max-w-2xl font-medium">
+        <h2 className="text-5xl font-light theme-text-primary tracking-tight">Diretório de Equipe</h2>
+        <p className="text-lg theme-text-secondary mt-3 max-w-2xl font-medium">
           Conecte-se com os criadores, arquitetos e diretores por trás do ecossistema Sound Calendar.
         </p>
       </div>
@@ -28,8 +28,8 @@ export function Members({ members, onUpdate }: MembersProps) {
             <span className="material-symbols-outlined">groups</span>
           </div>
           <div>
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Total no Estúdio</p>
-            <p className="text-xl font-bold text-slate-900 dark:text-white">{members.length} Membros</p>
+            <p className="text-[10px] font-bold theme-text-secondary uppercase tracking-widest">Total no Estúdio</p>
+            <p className="text-xl font-bold theme-text-primary">{members.length} Membros</p>
           </div>
         </div>
         <div className="glass-card p-6 rounded-3xl flex items-center gap-4">
@@ -37,8 +37,8 @@ export function Members({ members, onUpdate }: MembersProps) {
             <span className="material-symbols-outlined">pulse_alert</span>
           </div>
           <div>
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Ativos Agora</p>
-            <p className="text-xl font-bold text-slate-900 dark:text-white">{active.length} Online</p>
+            <p className="text-[10px] font-bold theme-text-secondary uppercase tracking-widest">Ativos Agora</p>
+            <p className="text-xl font-bold theme-text-primary">{active.length} Online</p>
           </div>
         </div>
         <div className="glass-card p-6 rounded-3xl flex items-center gap-4">
@@ -46,8 +46,8 @@ export function Members({ members, onUpdate }: MembersProps) {
             <span className="material-symbols-outlined">hub</span>
           </div>
           <div>
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Em Standby</p>
-            <p className="text-xl font-bold text-slate-900 dark:text-white">{inactive.length} Unidades</p>
+            <p className="text-[10px] font-bold theme-text-secondary uppercase tracking-widest">Em Standby</p>
+            <p className="text-xl font-bold theme-text-primary">{inactive.length} Unidades</p>
           </div>
         </div>
       </div>
@@ -59,12 +59,12 @@ export function Members({ members, onUpdate }: MembersProps) {
         ))}
         
         {/* Add Member Placeholder */}
-        <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 p-8 rounded-[32px] flex flex-col items-center justify-center text-center group hover:border-accent-primary/40 transition-all cursor-pointer min-h-[320px]">
-          <div className="w-16 h-16 rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center mb-4 group-hover:bg-accent-primary/5 transition-colors">
+        <div className="border-2 border-dashed theme-border p-8 rounded-[32px] flex flex-col items-center justify-center text-center group hover:border-accent-primary/40 transition-all cursor-pointer min-h-[320px]">
+          <div className="w-16 h-16 rounded-full theme-surface flex items-center justify-center mb-4 group-hover:bg-accent-primary/5 transition-colors">
             <span className="material-symbols-outlined text-slate-400 group-hover:text-accent-primary transition-colors">person_add</span>
           </div>
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white">Adicionar Membro</h3>
-          <p className="text-xs text-slate-400 font-medium mt-2">Convide novos talentos para o estúdio</p>
+          <h3 className="text-lg font-bold theme-text-primary">Adicionar Membro</h3>
+          <p className="text-xs theme-text-muted font-medium mt-2">Convide novos talentos para o estúdio</p>
         </div>
       </div>
     </div>
@@ -97,18 +97,18 @@ function MemberCard({ member: m, onToggle }: {
       </div>
 
       <div className="flex-1">
-        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1 tracking-tight">{m.name}</h3>
+        <h3 className="text-xl font-bold theme-text-primary mb-1 tracking-tight">{m.name}</h3>
         <p className="text-accent-primary font-bold text-xs uppercase tracking-widest mb-4">{m.role}</p>
         
         <div className="space-y-3">
           {m.telegramId && (
-            <div className="flex items-center gap-2 text-slate-400">
+            <div className="flex items-center gap-2 theme-text-muted">
               <span className="material-symbols-outlined text-[18px]">chat</span>
               <span className="text-xs font-semibold tracking-tight">@{m.telegramId}</span>
             </div>
           )}
           {m.email && (
-            <div className="flex items-center gap-2 text-slate-400">
+            <div className="flex items-center gap-2 theme-text-muted">
               <span className="material-symbols-outlined text-[18px]">alternate_email</span>
               <span className="text-xs font-semibold tracking-tight lowercase">{m.email}</span>
             </div>
@@ -117,7 +117,7 @@ function MemberCard({ member: m, onToggle }: {
       </div>
 
       <div className="mt-8 flex gap-3">
-        <button className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-bold uppercase tracking-widest hover:bg-slate-200 transition-colors">
+        <button className="flex-1 py-2.5 rounded-xl theme-surface theme-text-secondary text-[10px] font-bold uppercase tracking-widest hover:opacity-80 transition-colors">
           Perfil Completo
         </button>
         <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-accent-primary/10 text-accent-primary hover:bg-accent-primary/20 transition-colors">

@@ -25,9 +25,9 @@ export const metadata: Metadata = {
   keywords: ['studio planning', 'sound engineering', 'minimalist calendar', 'technical schedule', 'creative automation'],
   authors: [{ name: 'Sound Calendar Design System' }],
   icons: {
-    icon: '/icon.png',
-    shortcut: '/icon.png',
-    apple: '/icon.png',
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+    apple: '/icon.svg',
   },
   openGraph: {
     title: 'Sound Calendar // Studio Rhythm Control',

@@ -95,22 +95,22 @@ export function ScaleCreator({ members, onSave }: ScaleCreatorProps) {
       <div className="px-6 lg:px-12 py-8 space-y-8 flex-shrink-0">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <h2 className="text-4xl font-light text-slate-900 dark:text-white tracking-tight">Gerador de Escalas</h2>
-            <p className="text-slate-500 font-medium mt-1">Defina o cronograma e atribua a equipe.</p>
+            <h2 className="text-4xl font-light theme-text-primary tracking-tight">Gerador de Escalas</h2>
+            <p className="theme-text-secondary font-medium mt-1">Defina o cronograma e atribua a equipe.</p>
           </div>
 
           <div className="flex flex-col gap-4">
             {/* Tab Switcher */}
-            <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl w-fit">
+            <div className="flex p-1 theme-surface rounded-2xl w-fit">
               <button 
                 onClick={() => { setActiveTab('mensal'); setGeneratedShifts([]); }}
-                className={`px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${activeTab === 'mensal' ? 'bg-white dark:bg-slate-700 shadow-sm text-accent-primary' : 'text-slate-500'}`}
+                className={`px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${activeTab === 'mensal' ? 'theme-card-solid shadow-sm text-accent-primary' : 'theme-text-secondary'}`}
               >
                 Mensal
               </button>
               <button 
                 onClick={() => { setActiveTab('isolada'); setGeneratedShifts([]); }}
-                className={`px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${activeTab === 'isolada' ? 'bg-white dark:bg-slate-700 shadow-sm text-accent-primary' : 'text-slate-500'}`}
+                className={`px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${activeTab === 'isolada' ? 'theme-card-solid shadow-sm text-accent-primary' : 'theme-text-secondary'}`}
               >
                 Isolada
               </button>
@@ -119,7 +119,7 @@ export function ScaleCreator({ members, onSave }: ScaleCreatorProps) {
             {/* Global Actions */}
             <div className="flex items-center gap-4">
                {activeTab === 'mensal' ? (
-                 <div className="flex gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl">
+                 <div className="flex gap-2 theme-surface p-1 rounded-2xl">
                     <select 
                       value={month} 
                       onChange={(e) => setMonth(Number(e.target.value))}
@@ -152,19 +152,19 @@ export function ScaleCreator({ members, onSave }: ScaleCreatorProps) {
         </div>
 
         {/* Global Save Toggle */}
-        <div className="flex items-center justify-between py-4 border-y border-slate-100 dark:border-slate-800">
+        <div className="flex items-center justify-between py-4 border-y theme-border">
           <div className="flex items-center gap-6">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Modo de Gravação</span>
-            <div className="flex p-1 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800">
+            <span className="text-[10px] font-bold theme-text-muted uppercase tracking-[0.2em]">Modo de Gravação</span>
+            <div className="flex p-1 theme-card-solid rounded-xl border theme-border">
               <button 
                 onClick={() => setSaveMode('all')}
-                className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${saveMode === 'all' ? 'bg-white dark:bg-slate-800 shadow-sm text-accent-primary' : 'text-slate-400'}`}
+                className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${saveMode === 'all' ? 'theme-surface shadow-sm text-accent-primary' : 'theme-text-muted'}`}
               >
                 Salvar Todos
               </button>
               <button 
                 onClick={() => setSaveMode('filled')}
-                className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${saveMode === 'filled' ? 'bg-white dark:bg-slate-800 shadow-sm text-accent-primary' : 'text-slate-400'}`}
+                className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${saveMode === 'filled' ? 'theme-surface shadow-sm text-accent-primary' : 'theme-text-muted'}`}
               >
                 Apenas Preenchidos
               </button>
@@ -184,21 +184,21 @@ export function ScaleCreator({ members, onSave }: ScaleCreatorProps) {
       {/* Vertical Card List */}
       <div className="flex-1 overflow-y-auto px-6 lg:px-12 space-y-6 pb-20 custom-scrollbar">
         {generatedShifts.length === 0 ? (
-          <div className="h-64 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[40px] opacity-40">
+          <div className="h-64 flex flex-col items-center justify-center border-2 border-dashed theme-border rounded-[40px] opacity-40">
             <span className="material-symbols-outlined text-4xl mb-2">pending_actions</span>
             <p className="text-xs font-bold uppercase tracking-widest">Nenhuma escala {activeTab === 'mensal' ? 'gerada' : 'adicionada'}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {generatedShifts.map((shift, idx) => (
-              <div key={idx} className="glass-card p-8 rounded-[40px] shadow-ambient border border-white/50 flex flex-col gap-6 group hover:shadow-lift transition-all">
+              <div key={idx} className="glass-card p-8 rounded-[40px] shadow-ambient theme-border-strong flex flex-col gap-6 group hover:shadow-lift transition-all">
                 <div className="flex justify-between items-start">
                   <div className="flex flex-col gap-1">
                     <input 
                       type="text" 
                       value={shift.title} 
                       onChange={(e) => updateShiftField(idx, 'title', e.target.value)}
-                      className="bg-transparent border-none p-0 text-lg font-bold text-slate-800 dark:text-white uppercase tracking-tight focus:ring-0 w-full"
+                      className="bg-transparent border-none p-0 text-lg font-bold theme-text-primary uppercase tracking-tight focus:ring-0 w-full"
                     />
                     <div className="flex items-center gap-2">
                       <span className="material-symbols-outlined text-[14px] text-accent-primary">calendar_today</span>
@@ -206,11 +206,11 @@ export function ScaleCreator({ members, onSave }: ScaleCreatorProps) {
                         type="date" 
                         value={shift.date}
                         onChange={(e) => updateShiftField(idx, 'date', e.target.value)}
-                        className="bg-transparent border-none p-0 text-[10px] font-bold text-slate-500 uppercase tracking-widest focus:ring-0"
+                        className="bg-transparent border-none p-0 text-[10px] font-bold theme-text-secondary uppercase tracking-widest focus:ring-0"
                       />
                     </div>
                   </div>
-                  <button onClick={() => removeShift(idx)} className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-red-500 transition-all">
+                  <button onClick={() => removeShift(idx)} className="opacity-0 group-hover:opacity-100 p-2 theme-text-muted hover:text-red-500 transition-all">
                     <span className="material-symbols-outlined text-lg">delete</span>
                   </button>
                 </div>

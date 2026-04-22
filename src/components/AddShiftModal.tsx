@@ -47,19 +47,19 @@ export function AddShiftModal({ date, members, onClose, onSave, initialData }: A
   };
 
   return (
-    <div className="fixed inset-0 bg-black/20 dark:bg-black/40 backdrop-blur-sm z-[6000] flex items-center justify-center p-4 animate-fade-in"
+    <div className="fixed inset-0 theme-overlay-soft backdrop-blur-sm z-[6000] flex items-center justify-center p-4 animate-fade-in"
       onClick={onClose}>
-      <div className="glass-card rounded-[40px] p-10 w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl animate-slide-up relative border border-white/50"
+      <div className="glass-card rounded-[40px] p-10 w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl animate-slide-up relative theme-border-strong"
         onClick={(e) => e.stopPropagation()}>
         
         <div className="flex items-center justify-between mb-10">
           <div className="flex flex-col">
-            <h3 className="text-3xl font-light text-slate-900 dark:text-white tracking-tight">
+            <h3 className="text-3xl font-light theme-text-primary tracking-tight">
               {initialData ? 'Editar Escala' : 'Nova Escala'}
             </h3>
-            <p className="text-slate-500 font-medium mt-1">{formatLong(date)}</p>
+            <p className="theme-text-secondary font-medium mt-1">{formatLong(date)}</p>
           </div>
-          <button onClick={onClose} className="w-12 h-12 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-all flex items-center justify-center">
+          <button onClick={onClose} className="w-12 h-12 rounded-2xl hover:bg-[var(--color-bg-surface)] theme-text-muted transition-all flex items-center justify-center">
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
@@ -67,7 +67,7 @@ export function AddShiftModal({ date, members, onClose, onSave, initialData }: A
         <form className="flex flex-col gap-8" onSubmit={(e) => { e.preventDefault(); if (form.title.trim()) onSave(form); }}>
           <div className="space-y-6">
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Título da Sessão</label>
+              <label className="text-[10px] font-bold theme-text-muted uppercase tracking-widest px-1">Título da Sessão</label>
               <input 
                 className="organic-input w-full" 
                 placeholder="Ex: Culto de Celebração" 
@@ -80,7 +80,7 @@ export function AddShiftModal({ date, members, onClose, onSave, initialData }: A
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Tipo de Evento</label>
+                <label className="text-[10px] font-bold theme-text-muted uppercase tracking-widest px-1">Tipo de Evento</label>
                 <select 
                   className="organic-input w-full appearance-none" 
                   value={form.type} 
@@ -90,7 +90,7 @@ export function AddShiftModal({ date, members, onClose, onSave, initialData }: A
                 </select>
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Horário de Início</label>
+                <label className="text-[10px] font-bold theme-text-muted uppercase tracking-widest px-1">Horário de Início</label>
                 <input 
                   type="time" 
                   className="organic-input w-full" 
@@ -101,8 +101,8 @@ export function AddShiftModal({ date, members, onClose, onSave, initialData }: A
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Equipe Escalada</label>
-              <div className="flex flex-wrap gap-2 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-3xl border border-slate-100 dark:border-slate-800">
+              <label className="text-[10px] font-bold theme-text-muted uppercase tracking-widest px-1">Equipe Escalada</label>
+              <div className="flex flex-wrap gap-2 p-4 theme-card-solid rounded-3xl border theme-border">
                 {members.filter(m => m.active).map((m) => {
                   const sel = form.memberIds.includes(m.id);
                   return (
@@ -114,7 +114,7 @@ export function AddShiftModal({ date, members, onClose, onSave, initialData }: A
                         px-4 py-2 rounded-xl text-xs font-bold transition-all border
                         ${sel 
                           ? 'bg-accent-primary text-white border-accent-primary shadow-sm scale-105' 
-                          : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-accent-primary/40'}
+                          : 'theme-surface theme-text-secondary theme-border hover:border-accent-primary/40'}
                       `}
                     >
                       {m.name}
@@ -125,7 +125,7 @@ export function AddShiftModal({ date, members, onClose, onSave, initialData }: A
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Observações</label>
+              <label className="text-[10px] font-bold theme-text-muted uppercase tracking-widest px-1">Observações</label>
               <textarea 
                 className="organic-input w-full min-h-[100px] py-4" 
                 placeholder="Notas técnicas ou lembretes importantes..."
@@ -135,11 +135,11 @@ export function AddShiftModal({ date, members, onClose, onSave, initialData }: A
             </div>
           </div>
 
-          <div className="flex gap-4 justify-end mt-4 pt-10 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex gap-4 justify-end mt-4 pt-10 border-t theme-border">
             <button 
               type="button" 
               onClick={onClose} 
-              className="px-8 py-4 rounded-2xl text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all uppercase tracking-widest"
+              className="px-8 py-4 rounded-2xl text-xs font-bold theme-text-muted hover:opacity-75 transition-all uppercase tracking-widest"
             >
               Cancelar
             </button>

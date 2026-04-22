@@ -21,22 +21,22 @@ export function Topbar({ onOpenSidebar }: TopbarProps) {
   const title = PAGE_TITLES[pathname] || 'Sound Calendar';
 
   return (
-    <header className="w-full h-16 sticky top-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 flex justify-between items-center px-6 lg:px-12 z-40 shadow-sm shadow-slate-200/20">
+    <header className="w-full h-16 sticky top-0 backdrop-blur-xl border-b theme-border flex justify-between items-center px-6 lg:px-12 z-40 shadow-sm theme-card-solid">
       <div className="flex items-center gap-6">
         <button
           id="btn-menu"
-          className="lg:hidden p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+          className="lg:hidden p-2 rounded-xl theme-text-secondary hover:bg-[var(--color-bg-surface)] transition-all"
           onClick={onOpenSidebar}
         >
           <Menu size={20} />
         </button>
         
-        <h2 className="hidden sm:block text-sm font-bold text-slate-400 uppercase tracking-widest">{title}</h2>
+        <h2 className="hidden sm:block text-sm font-bold theme-text-muted uppercase tracking-widest">{title}</h2>
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/50 px-4 py-1.5 rounded-full border border-slate-100 dark:border-slate-800">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tema</span>
+        <div className="flex items-center gap-3 theme-surface px-4 py-1.5 rounded-full border theme-border">
+          <span className="text-[10px] font-bold theme-text-muted uppercase tracking-widest">Tema</span>
           <ThemeToggle />
         </div>
       </div>

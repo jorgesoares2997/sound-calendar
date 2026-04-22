@@ -120,32 +120,32 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
       <div className="flex-1">
         <div className="flex items-center justify-between mb-10">
           <div>
-            <h2 className="text-4xl font-light text-slate-900 dark:text-white tracking-tight">
+            <h2 className="text-4xl font-light theme-text-primary tracking-tight">
               {MONTHS[viewMonth]} {viewYear}
             </h2>
-            <p className="text-slate-500 font-medium mt-1">
+            <p className="theme-text-secondary font-medium mt-1">
               {shifts.filter(s => s.date.startsWith(`${viewYear}-${String(viewMonth+1).padStart(2, '0')}`)).length} sessões programadas
             </p>
           </div>
-          <div className="flex items-center gap-4 bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl shadow-sm">
-            <button onClick={prevMonth} className="p-2 hover:bg-white dark:hover:bg-slate-700 rounded-xl transition-all">
+          <div className="flex items-center gap-4 theme-surface p-1 rounded-2xl shadow-sm">
+            <button onClick={prevMonth} className="p-2 hover:bg-[var(--color-bg-card-hover)] rounded-xl transition-all">
               <span className="material-symbols-outlined">chevron_left</span>
             </button>
-            <button onClick={() => { setViewYear(today.getFullYear()); setViewMonth(today.getMonth()); }} className="px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-400">Hoje</button>
-            <button onClick={nextMonth} className="p-2 hover:bg-white dark:hover:bg-slate-700 rounded-xl transition-all">
+            <button onClick={() => { setViewYear(today.getFullYear()); setViewMonth(today.getMonth()); }} className="px-4 py-1.5 text-xs font-bold uppercase tracking-widest theme-text-secondary">Hoje</button>
+            <button onClick={nextMonth} className="p-2 hover:bg-[var(--color-bg-card-hover)] rounded-xl transition-all">
               <span className="material-symbols-outlined">chevron_right</span>
             </button>
           </div>
         </div>
 
-        <div className="glass-card rounded-[32px] overflow-hidden border border-white/50 shadow-ambient bg-white/40 dark:bg-slate-900/40">
+        <div className="glass-card rounded-[32px] overflow-hidden theme-border-strong shadow-ambient">
           {/* Grid Container with horizontal scroll on mobile */}
           <div className="overflow-x-auto custom-scrollbar">
             <div className="min-w-[700px] lg:min-w-0">
               {/* Weekday Labels */}
-              <div className="grid grid-cols-7 bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-200/50 dark:border-slate-700/50">
+              <div className="grid grid-cols-7 theme-card-solid border-b theme-border">
                 {WEEKDAYS.map((w) => (
-                  <div key={w} className="py-4 text-center text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+                  <div key={w} className="py-4 text-center text-[10px] font-bold theme-text-muted uppercase tracking-[0.2em]">
                     {w}
                   </div>
                 ))}
@@ -154,7 +154,7 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
               {/* Grid */}
               <div className="grid grid-cols-7 min-h-[500px] lg:min-h-[600px]">
             {calendarDays.map((day, idx) => {
-              if (!day) return <div key={`e-${idx}`} className="border-r border-b border-slate-100/50 dark:border-slate-800/50 bg-slate-50/20" />;
+              if (!day) return <div key={`e-${idx}`} className="border-r border-b theme-border theme-card-solid" />;
               const dateStr = toISODate(viewYear, viewMonth, day);
               const dayShifts = getShiftsForDay(day);
               const isToday = dateStr === todayStr;
@@ -165,11 +165,11 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
                   key={dateStr}
                   onClick={() => setSelectedDate(dateStr)}
                   className={`
-                    border-r border-b border-slate-100/50 dark:border-slate-800/50 p-4 relative group transition-all min-h-[100px] flex flex-col items-start gap-2
-                    ${isSelected ? 'bg-accent-primary/5 dark:bg-accent-primary/10' : 'hover:bg-white/50 dark:hover:bg-slate-800/50'}
+                    border-r border-b theme-border p-4 relative group transition-all min-h-[100px] flex flex-col items-start gap-2
+                    ${isSelected ? 'bg-accent-primary/10' : 'hover:bg-[var(--color-bg-card-hover)]'}
                   `}
                 >
-                  <span className={`text-sm font-bold ${isToday ? 'text-accent-primary' : 'text-slate-400 dark:text-slate-600'}`}>
+                  <span className={`text-sm font-bold ${isToday ? 'text-accent-primary' : 'theme-text-muted'}`}>
                     {day}
                   </span>
                   
@@ -182,7 +182,7 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
                       />
                     ))}
                     {dayShifts.length > 3 && (
-                      <span className="text-[8px] font-black text-slate-400 uppercase">+{dayShifts.length - 3} mais</span>
+                      <span className="text-[8px] font-black theme-text-muted uppercase">+{dayShifts.length - 3} mais</span>
                     )}
                   </div>
 
@@ -200,9 +200,9 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
 
       {/* Side Panel */}
       <aside className="w-full lg:w-[360px] flex flex-col gap-8">
-        <div className="glass-card p-8 rounded-[32px] border border-white/50 shadow-ambient flex flex-col">
+        <div className="glass-card p-8 rounded-[32px] theme-border-strong shadow-ambient flex flex-col">
           <div className="flex items-center justify-between mb-8">
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Próximos Módulos</h3>
+            <h3 className="text-xl font-bold theme-text-primary tracking-tight">Próximos Módulos</h3>
             <span className="text-[10px] font-bold text-accent-primary bg-accent-primary/10 px-3 py-1 rounded-full uppercase tracking-wider">7 Dias</span>
           </div>
 
@@ -219,11 +219,11 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
                       <span className="material-symbols-outlined">{getShiftMeta(shift.type).value === 'culto' ? 'church' : 'graphic_eq'}</span>
                     </div>
                     <div className="flex-1">
-                      <h4 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-accent-primary transition-colors uppercase tracking-tight">{shift.title}</h4>
-                      <p className="text-xs text-slate-500 mt-0.5 font-medium">{shift.startTime} - {shift.date.split('-').reverse().slice(0, 2).join('/')}</p>
+                      <h4 className="text-sm font-bold theme-text-primary group-hover:text-accent-primary transition-colors uppercase tracking-tight">{shift.title}</h4>
+                      <p className="text-xs theme-text-secondary mt-0.5 font-medium">{shift.startTime} - {shift.date.split('-').reverse().slice(0, 2).join('/')}</p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center justify-between pt-3 border-t theme-border">
                     <button 
                       onClick={(e) => { e.stopPropagation(); handleSendReminder(shift); }}
                       className="text-[10px] font-bold text-accent-primary hover:underline flex items-center gap-1 uppercase tracking-widest"
@@ -244,7 +244,7 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
 
         {/* Selected Date Actions */}
         {selectedDate && (
-          <div className="glass-card p-8 rounded-[32px] border border-white/50 bg-accent-primary text-white shadow-lift animate-slide-up">
+          <div className="glass-card p-8 rounded-[32px] theme-border-strong bg-accent-primary text-white shadow-lift animate-slide-up">
             <h4 className="text-[10px] font-bold uppercase tracking-widest opacity-70 mb-4">{formatLong(selectedDate)}</h4>
             <div className="flex flex-col gap-4">
               {shiftsForSelected.map(s => (

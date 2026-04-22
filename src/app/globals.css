@@ -19,6 +19,8 @@
   
   --color-glass: rgba(255, 255, 255, 0.4);
   --color-glass-blur: 20px;
+  --color-overlay-soft: rgba(15, 23, 42, 0.12);
+  --color-overlay-strong: rgba(15, 23, 42, 0.48);
   
   --color-error: #ba1a1a;
   --color-success: #4b6458;
@@ -39,6 +41,8 @@
   --color-border-card: rgba(255, 255, 255, 0.1);
   
   --color-glass: rgba(26, 28, 26, 0.4);
+  --color-overlay-soft: rgba(2, 6, 23, 0.45);
+  --color-overlay-strong: rgba(2, 6, 23, 0.7);
 }
 
 @theme {
@@ -99,6 +103,16 @@ body {
   border: 1px solid var(--color-border-card);
   box-shadow: var(--shadow-ambient);
 }
+
+.theme-text-primary { color: var(--color-text-primary); }
+.theme-text-secondary { color: var(--color-text-secondary); }
+.theme-text-muted { color: var(--color-text-muted); }
+.theme-surface { background: var(--color-bg-surface); }
+.theme-card-solid { background: color-mix(in srgb, var(--color-bg-surface) 82%, transparent); }
+.theme-border { border-color: var(--color-border-subtle); }
+.theme-border-strong { border-color: var(--color-border-card); }
+.theme-overlay-soft { background: var(--color-overlay-soft); }
+.theme-overlay-strong { background: var(--color-overlay-strong); }
 
 .organic-input {
   background: var(--color-bg-surface);
