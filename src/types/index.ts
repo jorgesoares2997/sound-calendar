@@ -29,6 +29,7 @@ export interface AppSettings {
   teamName: string;
   reminderMessage: string;
   defaultReminderHours: number;
+  dailyReminder?: boolean;
 }
 
 export type Page = 'calendar' | 'members' | 'settings' | 'scale-creator' | 'automation';

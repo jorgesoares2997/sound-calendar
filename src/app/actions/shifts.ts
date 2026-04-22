@@ -1,20 +1,58 @@
 'use server';
 
-import fs from 'fs';
-import path from 'path';
 import type { Shift } from '@/types';
+import { getSupabaseAdminClient } from '@/lib/supabase/server';
 import { logger } from '@/utils/logger';
 
-const SHIFTS_PATH = path.join(process.cwd(), 'src/data/shifts.json');
+type ShiftRow = {
+  id: string;
+  date: string;
+  title: string;
+  type: Shift['type'];
+  start_time: string;
+  end_time: string;
+  member_ids: string[];
+  notes: string;
+  created_at: string;
+};
+
+function toShift(row: ShiftRow): Shift {
+  return {
+    id: row.id,
+    date: row.date,
+    title: row.title,
+    type: row.type,
+    startTime: row.start_time,
+    endTime: row.end_time,
+    memberIds: row.member_ids || [],
+    notes: row.notes || '',
+    createdAt: row.created_at,
+  };
+}
+
+function toRow(shift: Shift): ShiftRow {
+  return {
+    id: shift.id,
+    date: shift.date,
+    title: shift.title,
+    type: shift.type,
+    start_time: shift.startTime,
+    end_time: shift.endTime,
+    member_ids: shift.memberIds,
+    notes: shift.notes,
+    created_at: shift.createdAt,
+  };
+}
 
 export async function getShiftsAction(): Promise<Shift[]> {
   try {
-    if (!fs.existsSync(SHIFTS_PATH)) {
-      logger.warn('Shifts database file not found, returning empty array.');
+    const supabase = getSupabaseAdminClient();
+    const { data, error } = await supabase.from('shifts').select('*').order('date', { ascending: true });
+    if (error) {
+      logger.error('Error reading shifts', error);
       return [];
     }
-    const data = fs.readFileSync(SHIFTS_PATH, 'utf8');
-    const shifts = JSON.parse(data) as Shift[];
+    const shifts = (data as ShiftRow[]).map(toShift);
     logger.debug(`Loaded ${shifts.length} shifts from DB.`);
     return shifts;
   } catch (error) {
@@ -25,6 +63,7 @@ export async function getShiftsAction(): Promise<Shift[]> {
 
 export async function saveShiftsAction(shifts: Shift[]): Promise<{ success: boolean; error?: string }> {
   try {
+    const supabase = getSupabaseAdminClient();
     // Final deduplication for safety: Ensure no two shifts have the same date, time and type
     const uniqueShifts = shifts.filter((shift, index, self) =>
       index === self.findIndex((s) => (
@@ -32,7 +71,28 @@ export async function saveShiftsAction(shifts: Shift[]): Promise<{ success: bool
       ))
     );
 
-    fs.writeFileSync(SHIFTS_PATH, JSON.stringify(uniqueShifts, null, 2));
+    const rows = uniqueShifts.map(toRow);
+    if (rows.length > 0) {
+      const { error: upsertError } = await supabase.from('shifts').upsert(rows, { onConflict: 'id' });
+      if (upsertError) {
+        logger.error('Erro ao fazer upsert de escalas', upsertError);
+        return { success: false, error: upsertError.message };
+      }
+
+      const ids = rows.map((row) => `"${row.id}"`).join(',');
+      const { error: cleanupError } = await supabase.from('shifts').delete().not('id', 'in', `(${ids})`);
+      if (cleanupError) {
+        logger.error('Erro ao limpar escalas removidas', cleanupError);
+        return { success: false, error: cleanupError.message };
+      }
+    } else {
+      const { error: clearError } = await supabase.from('shifts').delete().neq('id', '');
+      if (clearError) {
+        logger.error('Erro ao remover todas as escalas', clearError);
+        return { success: false, error: clearError.message };
+      }
+    }
+
     logger.info(`Salvas com sucesso ${uniqueShifts.length} escalas.`);
     return { success: true };
   } catch (error) {

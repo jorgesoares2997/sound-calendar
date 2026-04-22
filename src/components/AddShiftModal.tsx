@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import type { Shift, Member, ShiftType } from '@/types';
 import { SHIFT_TYPES } from './Calendar';
-import { PenTool, Calendar as CalendarIcon, Save, X, Clock, Users, FileText } from 'lucide-react';
 
 interface AddShiftModalProps {
   date: string;
@@ -48,91 +47,108 @@ export function AddShiftModal({ date, members, onClose, onSave, initialData }: A
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-[6000] flex items-center justify-center p-4 animate-fade-in"
+    <div className="fixed inset-0 bg-black/20 dark:bg-black/40 backdrop-blur-sm z-[6000] flex items-center justify-center p-4 animate-fade-in"
       onClick={onClose}>
-      <div className="studio-panel rounded-3xl p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl animate-slide-up relative"
+      <div className="glass-card rounded-[40px] p-10 w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl animate-slide-up relative border border-white/50"
         onClick={(e) => e.stopPropagation()}>
         
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-10">
           <div className="flex flex-col">
-            <div className="flex items-center gap-2 mb-1">
-              <PenTool size={10} className="text-accent-primary" />
-              <span className="mono-label text-[9px] text-accent-primary uppercase tracking-widest">PATCH_EDITOR // v1.2</span>
-            </div>
-            <h3 className="text-xl font-black text-white uppercase tracking-tighter">
-              {initialData ? 'Ajustar_Módulo' : 'Novo_Módulo_de_Escala'}
+            <h3 className="text-3xl font-light text-slate-900 dark:text-white tracking-tight">
+              {initialData ? 'Editar Escala' : 'Nova Escala'}
             </h3>
+            <p className="text-slate-500 font-medium mt-1">{formatLong(date)}</p>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded bg-white/5 border border-white/10 flex items-center justify-center text-text-muted hover:text-white transition-all">
-            <X size={18} />
+          <button onClick={onClose} className="w-12 h-12 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-all flex items-center justify-center">
+            <span className="material-symbols-outlined">close</span>
           </button>
         </div>
 
-        <div className="mb-8 p-4 bg-black/40 border border-white/5 rounded-xl flex items-center gap-4">
-          <div className="w-10 h-10 rounded bg-accent-primary/10 border border-accent-primary/20 flex items-center justify-center">
-            <CalendarIcon size={20} className="text-accent-primary" />
-          </div>
-          <div className="flex flex-col">
-            <span className="mono-label text-[8px] text-text-muted block mb-1 uppercase tracking-widest">TIMESTAMP_ALVO</span>
-            <div className="text-sm font-black text-accent-primary uppercase tracking-wider">
-              {formatLong(date)}
+        <form className="flex flex-col gap-8" onSubmit={(e) => { e.preventDefault(); if (form.title.trim()) onSave(form); }}>
+          <div className="space-y-6">
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Título da Sessão</label>
+              <input 
+                className="organic-input w-full" 
+                placeholder="Ex: Culto de Celebração" 
+                value={form.title}
+                onChange={(e) => set('title', e.target.value)} 
+                required 
+                autoFocus 
+              />
             </div>
-          </div>
-        </div>
 
-        <form className="flex flex-col gap-6" onSubmit={(e) => { e.preventDefault(); if (form.title.trim()) onSave(form); }}>
-          <Field label="TÍTULO_DA_ESCALA">
-            <input id="shift-title" className="studio-input font-bold uppercase tracking-widest" placeholder="EX: CULTO_MATUTINO..." value={form.title}
-              onChange={(e) => set('title', e.target.value)} required autoFocus />
-          </Field>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Tipo de Evento</label>
+                <select 
+                  className="organic-input w-full appearance-none" 
+                  value={form.type} 
+                  onChange={(e) => set('type', e.target.value as ShiftType)}
+                >
+                  {SHIFT_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Horário de Início</label>
+                <input 
+                  type="time" 
+                  className="organic-input w-full" 
+                  value={form.startTime} 
+                  onChange={(e) => set('startTime', e.target.value)} 
+                />
+              </div>
+            </div>
 
-          <Field label="TIPO_DE_SINAL">
-            <select id="shift-type" className="studio-input font-bold uppercase tracking-widest appearance-none" value={form.type} onChange={(e) => set('type', e.target.value as ShiftType)}>
-              {SHIFT_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label.toUpperCase()}</option>)}
-            </select>
-          </Field>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="START_TX">
-              <input id="shift-start" type="time" className="studio-input font-mono text-sm" value={form.startTime} onChange={(e) => set('startTime', e.target.value)} />
-            </Field>
-            <Field label="END_TX">
-              <input id="shift-end" type="time" className="studio-input font-mono text-sm" value={form.endTime} onChange={(e) => set('endTime', e.target.value)} />
-            </Field>
-          </div>
-
-          <Field label="PATCH_DE_OPERADORES">
-            {members.filter((m) => m.active).length === 0
-              ? <p className="text-[10px] text-accent-red/60 mono-label uppercase italic">ERRO: NENHUM_OPERADOR_ATIVO_DETECTADO</p>
-              : <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-                {members.filter((m) => m.active).map((m) => {
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Equipe Escalada</label>
+              <div className="flex flex-wrap gap-2 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-3xl border border-slate-100 dark:border-slate-800">
+                {members.filter(m => m.active).map((m) => {
                   const sel = form.memberIds.includes(m.id);
                   return (
-                    <label key={m.id} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${sel ? 'bg-accent-primary/10 border-accent-primary/40' : 'bg-black/40 border-white/[0.05] hover:border-white/20'}`}>
-                      <input type="checkbox" checked={sel} onChange={() => toggleMember(m.id)} className="hidden" />
-                      <div className="w-1.5 h-1.5 rounded-full flex-shrink-0 animate-pulse" style={{ backgroundColor: m.color, boxShadow: `0 0 5px ${m.color}` }} />
-                      <span className="text-xs font-bold text-white flex-1 uppercase tracking-tighter">{m.name}</span>
-                      <span className="mono-label text-[8px] text-text-muted uppercase tracking-widest">{m.role}</span>
-                      {sel && <span className="mono-label text-[9px] text-accent-primary font-black uppercase">LINK</span>}
-                    </label>
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => toggleMember(m.id)}
+                      className={`
+                        px-4 py-2 rounded-xl text-xs font-bold transition-all border
+                        ${sel 
+                          ? 'bg-accent-primary text-white border-accent-primary shadow-sm scale-105' 
+                          : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-accent-primary/40'}
+                      `}
+                    >
+                      {m.name}
+                    </button>
                   );
                 })}
               </div>
-            }
-          </Field>
+            </div>
 
-          <Field label="NOTAS_DE_ENGENHARIA">
-            <textarea id="shift-notes" className="studio-input resize-y min-h-[80px] text-xs leading-relaxed uppercase tracking-tight placeholder:opacity-20" placeholder="INFO_ADICIONAL_MÓDULO..."
-              value={form.notes} onChange={(e) => set('notes', e.target.value)} />
-          </Field>
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Observações</label>
+              <textarea 
+                className="organic-input w-full min-h-[100px] py-4" 
+                placeholder="Notas técnicas ou lembretes importantes..."
+                value={form.notes} 
+                onChange={(e) => set('notes', e.target.value)} 
+              />
+            </div>
+          </div>
 
-          <div className="flex gap-4 justify-end mt-4 pt-6 border-t border-white/5">
-            <button type="button" onClick={onClose} className="px-6 py-2 rounded mono-label text-[10px] font-black text-text-muted hover:text-white transition-all uppercase tracking-widest">
-              CANCELAR
+          <div className="flex gap-4 justify-end mt-4 pt-10 border-t border-slate-100 dark:border-slate-800">
+            <button 
+              type="button" 
+              onClick={onClose} 
+              className="px-8 py-4 rounded-2xl text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all uppercase tracking-widest"
+            >
+              Cancelar
             </button>
-            <button type="submit" id="btn-save-shift" className="px-8 py-3 rounded text-xs font-black bg-accent-primary text-white shadow-neon hover:brightness-110 active:scale-95 transition-all uppercase tracking-[0.2em] flex items-center gap-3">
-              <Save size={16} />
-              GRAVAR_PATCH
+            <button 
+              type="submit" 
+              className="px-10 py-4 rounded-2xl text-xs font-bold bg-accent-primary text-white shadow-lift hover:opacity-90 active:scale-95 transition-all uppercase tracking-widest flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined text-sm">save</span>
+              Salvar Escala
             </button>
           </div>
         </form>
@@ -140,13 +156,3 @@ export function AddShiftModal({ date, members, onClose, onSave, initialData }: A
     </div>
   );
 }
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-2">
-      <span className="mono-label text-[9px] text-text-muted uppercase tracking-[0.2em]">{label}</span>
-      {children}
-    </div>
-  );
-}
-

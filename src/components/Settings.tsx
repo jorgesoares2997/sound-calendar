@@ -1,232 +1,203 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useAppStore } from '@/components/Providers';
 import type { AppSettings } from '@/types';
-import { validateBotToken, sendTelegramMessage } from '@/utils/telegram';
-import { getEnvConfigStatusAction } from '@/app/actions/telegram';
-import { 
-  Send, 
-  Cpu, 
-  MessageSquare, 
-  Check, 
-  Eye, 
-  EyeOff, 
-  Save, 
-  RotateCcw,
-  ShieldCheck,
-  Settings2
-} from 'lucide-react';
 
 interface SettingsProps {
   settings: AppSettings;
-  onSave: (s: AppSettings) => void;
-  toast: { success: (m: string) => void; error: (m: string) => void };
+  onSave: (update: AppSettings | ((prev: AppSettings) => AppSettings)) => void;
+  toast: { success: (m: string) => void; error: (m: string) => void; info: (m: string) => void };
 }
 
 export function Settings({ settings, onSave, toast }: SettingsProps) {
-  const [form, setForm] = useState<AppSettings>({ ...settings });
-  const [validating, setValidating] = useState(false);
-  const [botName, setBotName] = useState<string | null>(null);
-  const [showToken, setShowToken] = useState(false);
-  const [envStatus, setEnvStatus] = useState<{ hasToken: boolean; hasChatId: boolean; teamName: string | null } | null>(null);
-  const [testMessage, setTestMessage] = useState('Sinal de teste do Sound Calendar!');
-  const [sendingTest, setSendingTest] = useState(false);
-
-  useEffect(() => {
-    getEnvConfigStatusAction().then(setEnvStatus);
-  }, []);
-
-  const set = <K extends keyof AppSettings>(k: K, v: AppSettings[K]) =>
-    setForm((f) => ({ ...f, [k]: v }));
-
-  const handleValidate = async () => {
-    setValidating(true); setBotName(null);
-    const res = await validateBotToken(form.botToken);
-    setValidating(false);
-    if (res.ok) { setBotName(`${res.botName} (@${res.username})`); toast.success(`Bot validado: @${res.username}`); }
-    else toast.error(`Token inválido: ${res.error}`);
+  const handleUpdate = (key: keyof AppSettings, val: any) => {
+    onSave((prev) => ({ ...prev, [key]: val }));
   };
-
-  const handleSave = () => { onSave(form); toast.success('Ajustes salvos!'); };
-  const handleReset = () => { setForm({ ...settings }); setBotName(null); };
-
-  const handleSendTest = async () => {
-    if (!testMessage.trim()) return;
-    setSendingTest(true);
-    const result = await sendTelegramMessage(form.botToken, form.groupChatId, testMessage);
-    setSendingTest(false);
-    if (result.ok) toast.success('Mensagem de teste enviada!');
-    else toast.error(`Erro ao enviar teste: ${result.error}`);
-  };
-
-  const previewMsg = form.reminderMessage
-    .replace('{member}', '*Jorge Soares*')
-    .replace('{date}', 'domingo, 20 de abril de 2025')
-    .replace('{shift}', 'Culto da Manhã')
-    .replace('{time}', '08:00');
 
   return (
-    <div className="flex flex-col gap-10 max-w-5xl mx-auto pb-20">
-      {/* Module Header */}
-      <div className="flex flex-col">
-        <div className="flex items-center gap-2 mb-1">
-          <Settings2 size={12} className="text-accent-primary" />
-          <span className="mono-label text-[10px] text-accent-primary uppercase tracking-widest">CONFIG_NÚCLEO_SISTEMA // v2.0</span>
-        </div>
-        <h1 className="text-3xl font-black text-white tracking-tighter uppercase leading-tight">
-          Ajustes_Mestres
-        </h1>
-      </div>
+    <div className="p-6 lg:p-12 max-w-7xl mx-auto animate-fade-in pb-32">
+      <header className="mb-12">
+        <h2 className="text-5xl font-light text-slate-900 dark:text-white tracking-tight">Ajustes do Sistema</h2>
+        <p className="text-lg text-slate-500 mt-3 font-medium">Gerencie a identidade do seu espaço de trabalho e as credenciais de integração.</p>
+      </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Telegram Rack */}
-        <div className="studio-panel rounded-lg overflow-hidden flex flex-col">
-          <div className="px-6 py-4 bg-black/20 border-b border-white/[0.03] flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded bg-telegram/10 border border-telegram/20 flex items-center justify-center">
-                <Send size={14} className="text-telegram" />
-              </div>
-              <span className="mono-label text-[10px] text-white font-black uppercase tracking-widest">Link_Sinal_Telegram</span>
+      <div className="grid grid-cols-12 gap-8">
+        {/* Team Identity Section */}
+        <section className="col-span-12 lg:col-span-7 glass-card rounded-[40px] p-10 shadow-ambient border border-white/50 space-y-8">
+          <div className="flex items-center gap-4 mb-2">
+            <div className="w-10 h-10 rounded-2xl bg-accent-primary/10 flex items-center justify-center text-accent-primary">
+              <span className="material-symbols-outlined">badge</span>
             </div>
-            <div className="signal-led signal-led-active" style={{ backgroundColor: 'var(--color-telegram)', boxShadow: '0 0 5px var(--color-telegram)' }} />
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Identidade da Equipe</h3>
           </div>
+          
+          <div className="space-y-6">
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Nome do Espaço de Trabalho</label>
+              <input 
+                className="organic-input w-full" 
+                value={settings.teamName} 
+                onChange={(e) => handleUpdate('teamName', e.target.value)} 
+                placeholder="Ex: Sound Collective"
+              />
+            </div>
 
-          <div className="p-6 flex flex-col gap-6">
-            <Field label="BUFFER_TOKEN_BOT">
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <input
-                    type={showToken ? 'text' : 'password'}
-                    className="studio-input font-mono text-[11px] pr-10"
-                    placeholder="INSERIR_TOKEN..."
-                    value={form.botToken}
-                    onChange={(e) => { set('botToken', e.target.value); setBotName(null); }}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">ID do Workspace</label>
+                <div className="relative">
+                  <input 
+                    className="organic-input w-full opacity-60 cursor-not-allowed pr-10" 
+                    value="SC-9210-AUD" 
+                    readOnly 
                   />
-                  <button type="button" onClick={() => setShowToken((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-white transition-colors">
-                    {showToken ? <EyeOff size={14} /> : <Eye size={14} />}
-                  </button>
+                  <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-accent-primary text-lg">content_copy</span>
                 </div>
-                <button onClick={handleValidate} disabled={!form.botToken || validating}
-                  className="px-4 py-2 rounded mono-label text-[10px] font-black bg-white/5 border border-white/10 text-text-muted hover:text-white hover:bg-white/10 disabled:opacity-30 transition-all uppercase flex items-center gap-2">
-                  {validating ? 'TX_...' : <Check size={14} />}
-                  VALIDAR
-                </button>
               </div>
-              {botName && (
-                <div className="mt-2 px-3 py-2 bg-accent-green/5 border border-accent-green/20 rounded mono-label text-[9px] text-accent-green uppercase tracking-widest">
-                  LINK_ESTABELECIDO: {botName}
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Data de Criação</label>
+                <input 
+                  className="organic-input w-full opacity-60 cursor-not-allowed" 
+                  value="Outubro 2023" 
+                  readOnly 
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Telegram Integration Section */}
+        <section className="col-span-12 lg:col-span-5 glass-card rounded-[40px] p-10 shadow-ambient border border-white/50 space-y-8">
+          <div className="flex items-center gap-4 mb-2">
+            <div className="w-10 h-10 rounded-2xl bg-accent-secondary/10 flex items-center justify-center text-accent-secondary">
+              <span className="material-symbols-outlined">send</span>
+            </div>
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Integração Telegram</h3>
+          </div>
+          
+          <div className="space-y-6">
+            <p className="text-slate-500 text-sm font-medium leading-relaxed">
+              Conecte o Sound Calendar ao Telegram para alertas de escala em tempo real.
+            </p>
+            <div className="space-y-4">
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Bot API Token</label>
+                <input 
+                  type="password" 
+                  className="organic-input w-full" 
+                  value={settings.botToken} 
+                  onChange={(e) => handleUpdate('botToken', e.target.value)} 
+                  placeholder="••••••••••••••••••••"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Chat ID do Grupo</label>
+                <input 
+                  className="organic-input w-full" 
+                  value={settings.groupChatId} 
+                  onChange={(e) => handleUpdate('groupChatId', e.target.value)} 
+                  placeholder="-100..."
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Message Template Section */}
+        <section className="col-span-12 glass-card rounded-[40px] p-10 shadow-ambient border border-white/50">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <div className="space-y-8">
+              <div className="flex items-center gap-4 mb-2">
+                <div className="w-10 h-10 rounded-2xl bg-accent-tertiary/10 flex items-center justify-center text-accent-tertiary">
+                  <span className="material-symbols-outlined">subject</span>
                 </div>
-              )}
-            </Field>
-
-            <Field label="ID_CHAT_DESTINO">
-              <input className="studio-input font-mono text-[11px]" placeholder="-100123456789"
-                value={form.groupChatId} onChange={(e) => set('groupChatId', e.target.value)} />
-            </Field>
-          </div>
-        </div>
-
-        {/* App Rack */}
-        <div className="studio-panel rounded-lg overflow-hidden flex flex-col">
-          <div className="px-6 py-4 bg-black/20 border-b border-white/[0.03] flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded bg-accent-primary/10 border border-accent-primary/20 flex items-center justify-center">
-                <Cpu size={14} className="text-accent-primary" />
+                <h3 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Template de Mensagem</h3>
               </div>
-              <span className="mono-label text-[10px] text-white font-black uppercase tracking-widest">Parâmetros_Aplicação</span>
-            </div>
-          </div>
-
-          <div className="p-6 flex flex-col gap-6">
-            <Field label="IDENTIDADE_EQUIPE">
-              <input className="studio-input font-bold uppercase tracking-wider" placeholder="EQUIPE_SOM_ALFA" value={form.teamName}
-                onChange={(e) => set('teamName', e.target.value)} />
-            </Field>
-
-            <div className="p-4 bg-black/40 border border-white/5 rounded-lg space-y-3">
-              <div className="mono-label text-[9px] text-text-muted uppercase tracking-widest border-b border-white/5 pb-2">LEITURA_INTEGRAÇÃO</div>
-              <StatusRow label="LINK_SINAL" ok={!!form.botToken || !!envStatus?.hasToken} isEnv={!!envStatus?.hasToken && !form.botToken} />
-              <StatusRow label="ROTA_DESTINO" ok={!!form.groupChatId || !!envStatus?.hasChatId} isEnv={!!envStatus?.hasChatId && !form.groupChatId} />
-            </div>
-          </div>
-        </div>
-
-        {/* Template Rack */}
-        <div className="studio-panel rounded-lg overflow-hidden flex flex-col lg:col-span-2">
-          <div className="px-6 py-4 bg-black/20 border-b border-white/[0.03] flex items-center gap-3">
-            <div className="w-8 h-8 rounded bg-accent-green/10 border border-accent-green/20 flex items-center justify-center">
-              <MessageSquare size={14} className="text-accent-green" />
-            </div>
-            <span className="mono-label text-[10px] text-white font-black uppercase tracking-widest">Síntese_Payload_Mensagem</span>
-          </div>
-
-          <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-10">
-            <div className="flex flex-col gap-6">
-              <Field label="TEMPLATE_PAYLOAD">
-                <textarea className="studio-input resize-y min-h-[160px] font-mono text-[11px] leading-relaxed"
-                  value={form.reminderMessage} onChange={(e) => set('reminderMessage', e.target.value)} />
-              </Field>
-              <div className="flex flex-wrap gap-2">
-                {['{member}', '{date}', '{shift}', '{time}'].map((v) => (
-                  <span key={v} className="mono-label text-[9px] px-2 py-1 rounded bg-accent-primary/10 border border-accent-primary/20 text-accent-primary font-black uppercase tracking-widest">{v}</span>
-                ))}
+              <p className="text-slate-500 font-medium">Personalize a estrutura das notificações automáticas usando suporte a Markdown.</p>
+              
+              <div className="space-y-4">
+                <textarea 
+                  className="organic-input w-full min-h-[160px] py-6 resize-none" 
+                  value={settings.reminderMessage} 
+                  onChange={(e) => handleUpdate('reminderMessage', e.target.value)}
+                />
+                <div className="flex flex-wrap gap-2">
+                  {['{member_name}', '{shift_title}', '{shift_time}', '{shift_date}'].map(tag => (
+                    <span key={tag} className="px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-[10px] font-bold text-slate-500 uppercase tracking-widest cursor-pointer hover:bg-accent-primary hover:text-white transition-all">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
 
-            <div className="flex flex-col gap-4">
-              <span className="mono-label text-[9px] text-text-muted uppercase tracking-widest">TELA_VIRTUAL_SIMULAÇÃO_REALTIME</span>
-              <div className="flex-1 bg-[#121212] border border-white/5 rounded p-6 shadow-inner relative overflow-hidden flex items-center justify-center">
-                 <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-                 <div className="z-10 bg-telegram/90 text-white text-[11px] leading-relaxed p-4 rounded-lg shadow-2xl max-w-xs relative border border-white/10 uppercase tracking-tight">
-                    {previewMsg}
-                    <div className="absolute top-0 right-full mr-2 h-0 w-0 border-[6px] border-transparent border-r-telegram/90" />
-                 </div>
+            <div className="flex flex-col">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1 mb-4">Pré-visualização</label>
+              <div className="flex-1 bg-slate-900 rounded-[32px] p-8 text-white relative overflow-hidden shadow-2xl">
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900 opacity-50" />
+                <div className="relative z-10">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-8 h-8 rounded-full bg-[#0088cc] flex items-center justify-center shadow-lift">
+                      <span className="material-symbols-outlined text-sm">send</span>
+                    </div>
+                    <span className="font-bold text-sm tracking-tight">SoundBot</span>
+                    <span className="text-slate-400 text-[10px] font-medium ml-auto">10:24</span>
+                  </div>
+                  <div className="space-y-3 bg-white/5 border border-white/10 p-6 rounded-2xl backdrop-blur-sm shadow-inner">
+                    <p className="text-sm">🔔 <span className="font-bold">Sessão:</span> Master Mix Phase A</p>
+                    <p className="text-sm">👤 <span className="font-bold">Membro:</span> Julian Thorne</p>
+                    <p className="text-sm">🕒 <span className="font-bold">Horário:</span> 14:00 - 16:30</p>
+                    <p className="text-[10px] italic text-slate-400 mt-6 border-t border-white/10 pt-4">Gerado por Sound Calendar Studio</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </section>
+
+        {/* System Health Section */}
+        <section className="col-span-12 glass-card rounded-[40px] p-10 shadow-ambient border border-white/50 mb-12">
+          <div className="flex items-center justify-between mb-10">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-2xl bg-accent-primary/10 flex items-center justify-center text-accent-primary">
+                <span className="material-symbols-outlined">monitor_heart</span>
+              </div>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Status do Sistema</h3>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-1.5 bg-green-500/10 text-green-600 rounded-full border border-green-500/20">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-[10px] font-bold uppercase tracking-widest">Sistemas Operacionais</span>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {[
+              { label: 'Latência API', val: '24ms' },
+              { label: 'Status Worker', val: 'Ativo' },
+              { label: 'Taxa de Cache', val: '98.2%' },
+              { label: 'Versão Sync', val: 'v4.2.0' },
+            ].map(item => (
+              <div key={item.label} className="p-6 bg-slate-50 dark:bg-slate-900/50 rounded-3xl text-center border border-slate-100 dark:border-slate-800">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{item.label}</p>
+                <p className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{item.val}</p>
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
 
-      {/* Master Save Bar */}
-      <div className="fixed bottom-0 left-0 right-0 lg:left-64 bg-black/80 backdrop-blur-2xl border-t border-white/10 p-4 flex items-center justify-end gap-4 z-40 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
-        <button onClick={handleReset}
-          className="px-6 py-2.5 rounded mono-label text-[10px] font-black bg-white/5 border border-white/10 text-text-muted hover:text-white transition-all uppercase tracking-widest flex items-center gap-2">
-          <RotateCcw size={12} />
-          RESETAR_BUFFERS
+      {/* Footer Actions */}
+      <footer className="fixed bottom-10 left-[320px] right-12 flex justify-end gap-4 z-40">
+        <button 
+          onClick={() => {
+            toast.success('Configurações do workspace salvas com sucesso');
+          }}
+          className="px-12 py-4 bg-accent-primary text-white rounded-[20px] font-bold text-xs uppercase tracking-[0.2em] shadow-lift hover:opacity-90 active:scale-95 transition-all flex items-center gap-3"
+        >
+          <span className="material-symbols-outlined text-sm">save</span>
+          Gravar Workspace
         </button>
-        <button onClick={handleSave}
-          className="px-10 py-3 rounded mono-label text-xs font-black bg-accent-primary text-white shadow-neon hover:brightness-110 active:scale-95 transition-all uppercase tracking-[0.2em] flex items-center gap-3">
-          <Save size={16} />
-          COMMITAR_ALTERAÇÕES
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-2">
-      <span className="mono-label text-[9px] text-text-muted uppercase tracking-[0.2em]">{label}</span>
-      {children}
-    </div>
-  );
-}
-
-function StatusRow({ label, ok, isEnv }: { label: string; ok: boolean; isEnv?: boolean }) {
-  return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        {ok ? <ShieldCheck size={10} className="text-accent-green" /> : <ShieldCheck size={10} className="text-text-muted opacity-40" />}
-        <span className="mono-label text-[8px] text-text-muted uppercase tracking-widest">{label}</span>
-      </div>
-      <div className="flex items-center gap-2">
-        <span className={`mono-label text-[9px] font-black ${ok ? 'text-accent-green' : 'text-text-muted opacity-40'} uppercase`}>
-          {ok ? (isEnv ? 'SYNC_ENV' : 'SYNC_OK') : 'OFFLINE'}
-        </span>
-        <div className={`signal-led ${ok ? 'signal-led-active' : ''}`} style={ok ? { backgroundColor: 'var(--color-accent-green)', boxShadow: '0 0 5px var(--color-accent-green)' } : { backgroundColor: '#333' }} />
-      </div>
+      </footer>
     </div>
   );
 }

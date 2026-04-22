@@ -1,280 +1,284 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import type { Member, Shift, ShiftType, Page } from '@/types';
-import { generateSuggestedScales } from '@/utils/date-helpers';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import type { Shift, Member, ShiftType } from '@/types';
 import { SHIFT_TYPES } from './Calendar';
-import { logger } from '@/utils/logger';
 
 interface ScaleCreatorProps {
   members: Member[];
-  onSave: (shifts: Omit<Shift, 'id' | 'createdAt'>[], year: number, month: number) => void;
-  onSaveSingle: (shift: Omit<Shift, 'id' | 'createdAt'>) => void;
-  onNavigate?: (page: Page) => void;
-  toast: { success: (m: string) => void; error: (m: string) => void };
+  onSave: (shifts: Omit<Shift, 'id' | 'createdAt'>[]) => void;
 }
 
-export function ScaleCreator({ members, onSave, onSaveSingle, onNavigate, toast }: ScaleCreatorProps) {
-  const today = new Date();
-  const [year, setYear] = useState(today.getFullYear());
-  const [month, setMonth] = useState(today.getMonth());
-  const [mode, setMode] = useState<'monthly' | 'isolated'>('isolated');
-  const [draftShifts, setDraftShifts] = useState<Omit<Shift, 'id' | 'createdAt'>[]>([]);
-  const [justSaved, setJustSaved] = useState(false);
+type Tab = 'mensal' | 'isolada';
+type SaveMode = 'all' | 'filled';
 
-  useEffect(() => {
-    logger.debug(`ScaleCreator: Modo alterado para ${mode}. Mês: ${month}, Ano: ${year}`);
-    if (mode === 'monthly') {
-      const suggestions = generateSuggestedScales(year, month).map(({ id, createdAt, ...rest }) => ({
-        ...rest,
-        memberIds: rest.memberIds || []
-      }));
-      setDraftShifts(suggestions);
-    } else {
-      setDraftShifts([]);
+export function ScaleCreator({ members, onSave }: ScaleCreatorProps) {
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<Tab>('mensal');
+  const [saveMode, setSaveMode] = useState<SaveMode>('filled');
+  const [month, setMonth] = useState(new Date().getMonth() + 1);
+  const [year, setYear] = useState(new Date().getFullYear());
+  const [generatedShifts, setGeneratedShifts] = useState<Omit<Shift, 'id' | 'createdAt'>[]>([]);
+
+  const generateMonth = () => {
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const newShifts: Omit<Shift, 'id' | 'createdAt'>[] = [];
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(year, month - 1, d);
+      const dayOfWeek = date.getDay();
+      const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+
+      // Domingo: 09:30 e 18:30
+      if (dayOfWeek === 0) {
+        newShifts.push({ title: 'Culto da Manhã', date: dateStr, type: 'culto', startTime: '09:30', endTime: '12:00', memberIds: [], notes: '' });
+        newShifts.push({ title: 'Culto da Noite', date: dateStr, type: 'culto', startTime: '18:30', endTime: '21:00', memberIds: [], notes: '' });
+      }
+      // Quarta: 19:30
+      if (dayOfWeek === 3) {
+        newShifts.push({ title: 'Culto de Quarta', date: dateStr, type: 'culto', startTime: '19:30', endTime: '21:30', memberIds: [], notes: '' });
+      }
     }
-    setJustSaved(false);
-  }, [year, month, mode]);
-
-  const updateShift = (index: number, changes: Partial<Omit<Shift, 'id' | 'createdAt'>>) => {
-    logger.debug(`ScaleCreator: Atualizando escala no índice ${index}`, changes);
-    setDraftShifts((prev) => {
-      const next = [...prev];
-      next[index] = { ...next[index], ...changes };
-      return next;
-    });
+    setGeneratedShifts(newShifts);
   };
 
-  const removeShift = (index: number) => {
-    logger.debug(`ScaleCreator: Removendo escala no índice ${index}`);
-    setDraftShifts((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const addEmptyShift = () => {
-    logger.debug('ScaleCreator: Adicionando nova escala isolada.');
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-01`;
-    setDraftShifts((prev) => [
+  const addIsolatedShift = () => {
+    const today = new Date().toISOString().split('T')[0];
+    setGeneratedShifts(prev => [
       ...prev,
-      {
-        date: dateStr,
-        title: 'Nova Escala',
-        type: 'culto',
-        startTime: '19:30',
-        endTime: '21:30',
-        memberIds: [],
-        notes: '',
-      },
+      { title: 'Nova Escala Isolada', date: today, type: 'evento', startTime: '19:00', endTime: '21:00', memberIds: [], notes: '' }
     ]);
   };
 
-  const handleSaveAll = () => {
-    logger.info(`ScaleCreator: handleSaveAll acionado com ${draftShifts.length} escalas.`);
-    if (draftShifts.length === 0) {
-      toast.error('Nenhuma escala para salvar.');
-      return;
+  const updateShift = (index: number, memberId: string) => {
+    const updated = [...generatedShifts];
+    const shift = { ...updated[index] };
+    if (shift.memberIds.includes(memberId)) {
+      shift.memberIds = shift.memberIds.filter(id => id !== memberId);
+    } else {
+      shift.memberIds = [...shift.memberIds, memberId];
     }
-    onSave(draftShifts, year, month);
-    setJustSaved(true);
-    toast.success(`${draftShifts.length} escalas sincronizadas!`);
+    updated[index] = shift;
+    setGeneratedShifts(updated);
   };
 
-  const handleSaveSingle = (index: number) => {
-    const shift = draftShifts[index];
-    logger.info(`ScaleCreator: handleSaveSingle acionado para escala no índice ${index}`, { shiftTitle: shift.title });
-    if (!shift.title.trim()) {
-      toast.error('A escala precisa de um título.');
-      return;
+  const updateShiftField = (index: number, field: keyof Omit<Shift, 'id' | 'createdAt'>, value: any) => {
+    const updated = [...generatedShifts];
+    updated[index] = { ...updated[index], [field]: value };
+    setGeneratedShifts(updated);
+  };
+
+  const saveSingle = (index: number) => {
+    onSave([generatedShifts[index]]);
+    router.push('/automacao');
+  };
+
+  const saveAll = () => {
+    const shiftsToSave = saveMode === 'filled' 
+      ? generatedShifts.filter(s => s.memberIds.length > 0)
+      : generatedShifts;
+    
+    if (shiftsToSave.length > 0) {
+      onSave(shiftsToSave);
+      router.push('/automacao');
     }
-    onSaveSingle(shift);
-    toast.success('Escala individual salva!');
-    removeShift(index);
   };
 
-  const formatDayName = (dateStr: string) => {
-    const parts = dateStr.split('-');
-    if (parts.length < 3) return '';
-    const [y, m, d] = parts.map(Number);
-    return new Date(y, m - 1, d).toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
+  const removeShift = (index: number) => {
+    setGeneratedShifts(prev => prev.filter((_, i) => i !== index));
   };
-
-  const activeMembers = members.filter((m) => m.active);
 
   return (
-    <div className="flex flex-col gap-8 max-w-5xl mx-auto pb-20">
-      {/* Console Header */}
-      <div className="flex items-center justify-between gap-6 flex-wrap px-1">
-        <div className="flex flex-col">
-          <span className="mono-label text-[10px] text-accent-primary mb-1 uppercase tracking-widest">MÓDULO_DE_GERAÇÃO // v2.4</span>
-          <h1 className="text-3xl font-black text-white tracking-tighter uppercase leading-tight">
-            Sintetizador_de_Escala
-          </h1>
+    <div className="flex flex-col h-full animate-fade-in pb-20">
+      {/* Header & Tabs */}
+      <div className="px-6 lg:px-12 py-8 space-y-8 flex-shrink-0">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <h2 className="text-4xl font-light text-slate-900 dark:text-white tracking-tight">Gerador de Escalas</h2>
+            <p className="text-slate-500 font-medium mt-1">Defina o cronograma e atribua a equipe.</p>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            {/* Tab Switcher */}
+            <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl w-fit">
+              <button 
+                onClick={() => { setActiveTab('mensal'); setGeneratedShifts([]); }}
+                className={`px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${activeTab === 'mensal' ? 'bg-white dark:bg-slate-700 shadow-sm text-accent-primary' : 'text-slate-500'}`}
+              >
+                Mensal
+              </button>
+              <button 
+                onClick={() => { setActiveTab('isolada'); setGeneratedShifts([]); }}
+                className={`px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${activeTab === 'isolada' ? 'bg-white dark:bg-slate-700 shadow-sm text-accent-primary' : 'text-slate-500'}`}
+              >
+                Isolada
+              </button>
+            </div>
+
+            {/* Global Actions */}
+            <div className="flex items-center gap-4">
+               {activeTab === 'mensal' ? (
+                 <div className="flex gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl">
+                    <select 
+                      value={month} 
+                      onChange={(e) => setMonth(Number(e.target.value))}
+                      className="bg-transparent border-none text-[10px] font-bold uppercase tracking-widest px-4 py-2 cursor-pointer focus:ring-0"
+                    >
+                      {Array.from({ length: 12 }, (_, i) => (
+                        <option key={i + 1} value={i + 1}>
+                          {new Date(0, i).toLocaleString('pt-BR', { month: 'long' })}
+                        </option>
+                      ))}
+                    </select>
+                    <button 
+                      onClick={generateMonth}
+                      className="px-6 py-2 rounded-xl bg-accent-primary text-white font-bold text-[10px] uppercase tracking-widest hover:opacity-90 transition-all shadow-sm"
+                    >
+                      Gerar
+                    </button>
+                 </div>
+               ) : (
+                 <button 
+                   onClick={addIsolatedShift}
+                   className="px-6 py-3 rounded-2xl bg-accent-primary text-white font-bold text-[10px] uppercase tracking-widest hover:opacity-90 transition-all shadow-lift flex items-center gap-2"
+                 >
+                   <span className="material-symbols-outlined text-sm">add</span>
+                   Nova Escala
+                 </button>
+               )}
+            </div>
+          </div>
         </div>
-        
-        <div className="flex items-center p-1.5 bg-black/40 border border-white/5 rounded-lg shadow-inner">
+
+        {/* Global Save Toggle */}
+        <div className="flex items-center justify-between py-4 border-y border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-6">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Modo de Gravação</span>
+            <div className="flex p-1 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800">
+              <button 
+                onClick={() => setSaveMode('all')}
+                className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${saveMode === 'all' ? 'bg-white dark:bg-slate-800 shadow-sm text-accent-primary' : 'text-slate-400'}`}
+              >
+                Salvar Todos
+              </button>
+              <button 
+                onClick={() => setSaveMode('filled')}
+                className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${saveMode === 'filled' ? 'bg-white dark:bg-slate-800 shadow-sm text-accent-primary' : 'text-slate-400'}`}
+              >
+                Apenas Preenchidos
+              </button>
+            </div>
+          </div>
+          
           <button 
-            type="button"
-            onClick={() => setMode('monthly')}
-            className={`px-6 py-2 rounded mono-label text-[10px] font-black transition-all uppercase tracking-widest ${mode === 'monthly' ? 'bg-accent-primary text-white shadow-neon' : 'text-text-muted hover:text-white'}`}
+            onClick={saveAll}
+            disabled={generatedShifts.length === 0}
+            className="px-10 py-3 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl font-bold text-[10px] uppercase tracking-[0.2em] shadow-lift hover:opacity-90 active:scale-95 transition-all disabled:opacity-30 disabled:pointer-events-none"
           >
-            LOTE_MENSAL
-          </button>
-          <button 
-            type="button"
-            onClick={() => setMode('isolated')}
-            className={`px-6 py-2 rounded mono-label text-[10px] font-black transition-all uppercase tracking-widest ${mode === 'isolated' ? 'bg-accent-primary text-white shadow-neon' : 'text-text-muted hover:text-white'}`}
-          >
-            TX_ISOLADA
+            Gravar Lote e Notificar
           </button>
         </div>
       </div>
 
-      {mode === 'monthly' && (
-        <div className="flex items-center gap-3 px-4 py-3 bg-black/20 border border-white/5 rounded-lg">
-          <div className="flex items-center gap-2">
-            <span className="mono-label text-[9px] text-text-muted uppercase tracking-widest">SELEÇÃO_BANCO:</span>
-            <select 
-              value={month} 
-              onChange={(e) => setMonth(Number(e.target.value))}
-              className="bg-black/60 border border-white/10 rounded px-3 py-1.5 mono-label text-[10px] text-white outline-none focus:border-accent-primary uppercase"
-            >
-              {MONTH_NAMES.map((m, i) => <option key={m} value={i}>{m.toUpperCase()}</option>)}
-            </select>
+      {/* Vertical Card List */}
+      <div className="flex-1 overflow-y-auto px-6 lg:px-12 space-y-6 pb-20 custom-scrollbar">
+        {generatedShifts.length === 0 ? (
+          <div className="h-64 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[40px] opacity-40">
+            <span className="material-symbols-outlined text-4xl mb-2">pending_actions</span>
+            <p className="text-xs font-bold uppercase tracking-widest">Nenhuma escala {activeTab === 'mensal' ? 'gerada' : 'adicionada'}</p>
           </div>
-          <select 
-            value={year} 
-            onChange={(e) => setYear(Number(e.target.value))}
-            className="bg-black/60 border border-white/10 rounded px-3 py-1.5 mono-label text-[10px] text-white outline-none focus:border-accent-primary"
-          >
-            {[2024, 2025, 2026].map((y) => <option key={y} value={y}>{y}</option>)}
-          </select>
-          <div className="ml-auto flex items-center gap-2">
-            <div className="signal-led signal-led-active opacity-40" />
-            <span className="mono-label text-[8px] text-text-muted italic uppercase tracking-widest">GERAÇÃO_AUTO_ATIVA (DOM/QUA)</span>
-          </div>
-        </div>
-      )}
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {generatedShifts.map((shift, idx) => (
+              <div key={idx} className="glass-card p-8 rounded-[40px] shadow-ambient border border-white/50 flex flex-col gap-6 group hover:shadow-lift transition-all">
+                <div className="flex justify-between items-start">
+                  <div className="flex flex-col gap-1">
+                    <input 
+                      type="text" 
+                      value={shift.title} 
+                      onChange={(e) => updateShiftField(idx, 'title', e.target.value)}
+                      className="bg-transparent border-none p-0 text-lg font-bold text-slate-800 dark:text-white uppercase tracking-tight focus:ring-0 w-full"
+                    />
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[14px] text-accent-primary">calendar_today</span>
+                      <input 
+                        type="date" 
+                        value={shift.date}
+                        onChange={(e) => updateShiftField(idx, 'date', e.target.value)}
+                        className="bg-transparent border-none p-0 text-[10px] font-bold text-slate-500 uppercase tracking-widest focus:ring-0"
+                      />
+                    </div>
+                  </div>
+                  <button onClick={() => removeShift(idx)} className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-red-500 transition-all">
+                    <span className="material-symbols-outlined text-lg">delete</span>
+                  </button>
+                </div>
 
-      {/* Sequencer / Module Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {draftShifts.map((shift, idx) => (
-          <div key={`${idx}-${shift.date}`} className="studio-panel rounded-lg p-5 flex gap-6 hover:border-accent-primary/30 transition-all relative group overflow-hidden">
-            {/* Day Display Module */}
-            <div className="flex flex-col items-center justify-center border-r border-white/5 pr-6 min-w-[80px]">
-              <span className="mono-label text-[10px] text-accent-primary mb-1 uppercase font-black">{formatDayName(shift.date).toUpperCase()}</span>
-              <input 
-                type="number"
-                className="bg-black/40 border border-white/10 rounded text-xl font-black text-white outline-none text-center w-14 py-2 focus:border-accent-primary shadow-inner"
-                value={parseInt(shift.date.split('-')[2], 10) || 1}
-                onChange={(e) => {
-                  const dayNum = parseInt(e.target.value, 10);
-                  if (!isNaN(dayNum) && dayNum >= 1 && dayNum <= 31) {
-                    const val = String(dayNum).padStart(2, '0');
-                    const [y, m] = shift.date.split('-');
-                    updateShift(idx, { date: `${y}-${m}-${val}` });
-                  }
-                }}
-              />
-            </div>
-
-            {/* Parameter Controls */}
-            <div className="flex flex-col gap-4 flex-grow min-w-0">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <select 
-                    className="bg-black/60 border border-white/10 rounded px-2 py-1 mono-label text-[9px] text-accent-primary outline-none focus:border-accent-primary uppercase"
-                    value={shift.type}
-                    onChange={(e) => updateShift(idx, { type: e.target.value as ShiftType })}
-                  >
-                    {SHIFT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label.toUpperCase()}</option>)}
-                  </select>
-                  <div className="flex items-center gap-2 px-2 py-1 bg-black/40 border border-white/5 rounded">
-                    <input type="time" className="bg-transparent mono-label text-[10px] text-white outline-none w-14" value={shift.startTime} onChange={(e) => updateShift(idx, { startTime: e.target.value })} />
-                    <span className="text-text-muted text-[10px]">-</span>
-                    <input type="time" className="bg-transparent mono-label text-[10px] text-white outline-none w-14" value={shift.endTime} onChange={(e) => updateShift(idx, { endTime: e.target.value })} />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-1">Início</label>
+                    <input 
+                      type="time" 
+                      value={shift.startTime}
+                      onChange={(e) => updateShiftField(idx, 'startTime', e.target.value)}
+                      className="organic-input w-full text-xs font-bold py-2"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-1">Término</label>
+                    <input 
+                      type="time" 
+                      value={shift.endTime}
+                      onChange={(e) => updateShiftField(idx, 'endTime', e.target.value)}
+                      className="organic-input w-full text-xs font-bold py-2"
+                    />
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <button onClick={() => handleSaveSingle(idx)} className="px-1.5 h-8 rounded bg-white/5 border border-white/10 flex items-center justify-center mono-label text-[8px] font-black hover:text-accent-green transition-all uppercase">GRAVAR</button>
-                  <button onClick={() => removeShift(idx)} className="w-8 h-8 rounded bg-white/5 border border-white/10 flex items-center justify-center mono-label text-[10px] font-black hover:text-accent-red transition-all uppercase">DEL</button>
-                </div>
-              </div>
 
-              <div className="space-y-3">
-                <div className="relative">
-                  <span className="absolute -top-2 left-2 px-1 bg-bg-card mono-label text-[7px] text-text-muted uppercase tracking-widest">RÓTULO_DO_MÓDULO</span>
-                  <input 
-                    className="w-full bg-black/40 border border-white/10 rounded px-3 py-2 text-xs font-bold text-white outline-none focus:border-accent-primary placeholder:opacity-20 uppercase"
-                    value={shift.title}
-                    placeholder="NOME_DA_ESCALA..."
-                    onChange={(e) => updateShift(idx, { title: e.target.value })}
-                  />
+                <div className="space-y-3">
+                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block px-1">Atribuir Operador</label>
+                  <div className="relative">
+                    <select 
+                      className="organic-input w-full text-[11px] font-bold py-3 appearance-none"
+                      onChange={(e) => updateShift(idx, e.target.value)}
+                      value=""
+                    >
+                      <option value="">Selecionar...</option>
+                      {members.filter(m => m.active).map(m => (
+                        <option key={m.id} value={m.id}>{m.name}</option>
+                      ))}
+                    </select>
+                    <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-lg">expand_more</span>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {shift.memberIds.map(id => {
+                      const member = members.find(m => m.id === id);
+                      return (
+                        <span key={id} className="px-3 py-1.5 bg-accent-primary/5 dark:bg-accent-primary/10 rounded-xl text-[10px] font-bold text-accent-primary uppercase tracking-tight flex items-center gap-2 border border-accent-primary/10">
+                          {member?.name}
+                          <button onClick={() => updateShift(idx, id)} className="hover:text-red-500 transition-colors">
+                            <span className="material-symbols-outlined text-[12px]">close</span>
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
                 </div>
-                
-                <div className="relative">
-                  <span className="absolute -top-2 left-2 px-1 bg-bg-card mono-label text-[7px] text-text-muted uppercase tracking-widest">PATCH_DE_OPERADOR</span>
-                  <select 
-                    className="w-full bg-black/40 border border-white/10 rounded px-3 py-2 text-xs font-bold text-white outline-none focus:border-accent-primary appearance-none uppercase"
-                    value={shift.memberIds[0] || ''}
-                    onChange={(e) => updateShift(idx, { memberIds: e.target.value ? [e.target.value] : [] })}
-                  >
-                    <option value="">SELECIONAR_OPERADOR...</option>
-                    {activeMembers.map(m => <option key={m.id} value={m.id}>{m.name.toUpperCase()}</option>)}
-                  </select>
-                </div>
+
+                <button 
+                  onClick={() => saveSingle(idx)}
+                  className="mt-auto w-full py-3 bg-slate-50 dark:bg-slate-800 rounded-2xl text-[9px] font-black text-slate-500 uppercase tracking-widest hover:bg-accent-primary hover:text-white transition-all shadow-sm flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-sm">save</span>
+                  Gravar Esta Escala
+                </button>
               </div>
-            </div>
+            ))}
           </div>
-        ))}
-        
-        <button 
-          type="button"
-          onClick={addEmptyShift}
-          className="studio-panel rounded-lg border-dashed border-white/10 flex flex-col items-center justify-center gap-3 p-8 hover:bg-white/[0.02] hover:border-accent-primary/40 transition-all group"
-        >
-          <div className="w-12 h-12 rounded bg-black/40 border border-white/10 flex items-center justify-center mono-label text-[10px] font-black group-hover:scale-110 transition-transform shadow-inner text-text-muted group-hover:text-white uppercase">ADD</div>
-          <span className="mono-label text-[10px] text-text-muted group-hover:text-white uppercase tracking-widest">NOVO_MÓDULO_PATCH</span>
-        </button>
+        )}
       </div>
-
-      {/* Master Control Bar */}
-      {(mode === 'monthly' || draftShifts.length > 0) && (
-        <div className="fixed bottom-0 left-0 right-0 lg:left-64 bg-black/80 backdrop-blur-2xl border-t border-white/10 p-4 flex items-center justify-between gap-6 z-40 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
-          <div className="flex items-center gap-4">
-            <div className="flex flex-col">
-              <span className="mono-label text-[8px] text-text-muted uppercase tracking-widest">STATUS_DO_LOTE</span>
-              <span className="text-xs font-black text-white uppercase tracking-tighter">{draftShifts.length} MÓDULOS_EM_BUFFER</span>
-            </div>
-            <div className="vu-meter w-20">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="vu-bar w-1.5" style={{ height: `${Math.random() * 80 + 20}%`, animationDelay: `${i * 0.1}s` }} />
-              ))}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {justSaved && (
-              <button 
-                onClick={() => onNavigate?.('automation')}
-                className="px-6 py-2.5 rounded mono-label text-[10px] font-black bg-white/5 border border-white/10 text-accent-primary hover:bg-accent-primary/10 transition-all animate-fade-in uppercase tracking-widest"
-              >
-                IR_PARA_ROBÔ_DE_ROTEAMENTO
-              </button>
-            )}
-            <button 
-              onClick={handleSaveAll}
-              className="px-10 py-3 rounded mono-label text-xs font-black bg-accent-primary text-white shadow-neon hover:brightness-110 active:scale-95 transition-all uppercase tracking-[0.2em]"
-            >
-              COMMIT_TODOS_BUFFERS
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
-
-
-const MONTH_NAMES = [
-  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-];

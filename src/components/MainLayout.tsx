@@ -19,10 +19,10 @@ export function MainLayout({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-[#0a0b0f] relative overflow-hidden">
+    <div className="flex min-h-screen bg-bg-base relative overflow-x-hidden">
       {/* Background decoration */}
-      <div className="pointer-events-none fixed top-0 right-0 w-[500px] h-[500px] rounded-full bg-violet-600/[0.06] blur-[120px]" />
-      <div className="pointer-events-none fixed bottom-0 left-40 w-[400px] h-[400px] rounded-full bg-cyan-500/[0.04] blur-[100px]" />
+      <div className="pointer-events-none fixed top-0 right-0 w-[500px] h-[500px] rounded-full bg-accent-primary/5 blur-[120px]" />
+      <div className="pointer-events-none fixed bottom-0 left-40 w-[400px] h-[400px] rounded-full bg-accent-secondary/5 blur-[100px]" />
 
       <Sidebar
         teamName={settings.teamName}
@@ -31,15 +31,16 @@ export function MainLayout({ children }: { children: ReactNode }) {
       />
 
       {/* Main */}
-      <main className="flex-1 flex flex-col min-h-screen lg:ml-60">
+      <main className="flex-1 flex flex-col min-h-screen lg:pl-72 transition-all">
         <Topbar 
           onOpenSidebar={() => setSidebarOpen(true)}
-          envStatus={envStatus}
         />
 
         {/* Page content */}
-        <div className="flex-1 p-3 sm:p-6 lg:p-8 relative z-10 transition-all">
-          {children}
+        <div className="flex-1 p-4 sm:p-6 lg:p-10 relative z-10">
+          <div className="max-w-[1600px] mx-auto">
+            {children}
+          </div>
         </div>
       </main>
 

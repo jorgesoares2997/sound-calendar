@@ -2,28 +2,12 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import type { Member, Shift, AppSettings } from '@/types';
-import initialMembers from '@/data/members.json';
-import { getShiftsAction, saveShiftsAction } from '@/app/actions/shifts';
+import { getShiftsAction, saveShiftsAction, syncMonthShiftsAction } from '@/app/actions/shifts';
+import { getMembersAction, saveMembersAction } from '@/app/actions/members';
+import { getSettingsAction, saveSettingsAction } from '@/app/actions/settings';
 import { logger } from '@/utils/logger';
 
-const KEYS = { MEMBERS: 'sc_members', SHIFTS: 'sc_shifts', SETTINGS: 'sc_settings' };
-
-function load<T>(key: string, fallback: T): T {
-  if (typeof window === 'undefined') return fallback;
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function save<T>(key: string, value: T): void {
-  localStorage.setItem(key, JSON.stringify(value));
-}
-
-// Static members from JSON
-const DEFAULT_MEMBERS: Member[] = initialMembers as Member[];
+const DEFAULT_MEMBERS: Member[] = [];
 
 const DEFAULT_SETTINGS: AppSettings = {
   botToken: '',
@@ -32,28 +16,53 @@ const DEFAULT_SETTINGS: AppSettings = {
   reminderMessage:
     '🎛️ Lembrete de escala!\n\n{member} você está na escala de *{date}* ({shift}).\n\nFique atento ao horário! 🙏',
   defaultReminderHours: 24,
+  dailyReminder: true,
 };
 
 export function useStore() {
   const [members, setMembersState] = useState<Member[]>(DEFAULT_MEMBERS);
   const [shifts, setShiftsState] = useState<Shift[]>([]);
-  const [settings, setSettingsState] = useState<AppSettings>(() =>
-    load(KEYS.SETTINGS, DEFAULT_SETTINGS),
-  );
+  const [settings, setSettingsState] = useState<AppSettings>(DEFAULT_SETTINGS);
+  const [hydrated, setHydrated] = useState(false);
 
   // Sync with server on mount
   useEffect(() => {
-    getShiftsAction().then(setShiftsState);
+    let mounted = true;
+    Promise.all([getMembersAction(), getShiftsAction(), getSettingsAction()])
+      .then(([loadedMembers, loadedShifts, loadedSettings]) => {
+        if (!mounted) return;
+        setMembersState(loadedMembers);
+        setShiftsState(loadedShifts);
+        setSettingsState(loadedSettings);
+        setHydrated(true);
+      })
+      .catch((error) => {
+        logger.error('useStore: erro ao carregar dados iniciais', error);
+        if (mounted) setHydrated(true);
+      });
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  // Persistence Effect
+  // Shifts persistence
   useEffect(() => {
-    if (shifts.length > 0 || initialMembers.length === 0) { // Avoid saving empty initial state if not intended
-       saveShiftsAction(shifts).catch(e => logger.error('useStore: Erro ao persistir escalas', e));
-    }
-  }, [shifts]);
+    if (!hydrated) return;
+    saveShiftsAction(shifts).catch((e) => logger.error('useStore: Erro ao persistir escalas', e));
+  }, [hydrated, shifts]);
 
-  // Member management is now static/JSON-based
+  // Members persistence
+  useEffect(() => {
+    if (!hydrated) return;
+    saveMembersAction(members).catch((e) => logger.error('useStore: Erro ao persistir membros', e));
+  }, [hydrated, members]);
+
+  // Settings persistence
+  useEffect(() => {
+    if (!hydrated) return;
+    saveSettingsAction(settings).catch((e) => logger.error('useStore: Erro ao persistir configurações', e));
+  }, [hydrated, settings]);
+
   const setMembers = useCallback((update: Member[] | ((prev: Member[]) => Member[])) => {
     setMembersState(update);
   }, []);
@@ -67,9 +76,7 @@ export function useStore() {
 
   const setSettings = useCallback((update: AppSettings | ((prev: AppSettings) => AppSettings)) => {
     setSettingsState((prev) => {
-      const next = typeof update === 'function' ? update(prev) : update;
-      save(KEYS.SETTINGS, next);
-      return next;
+      return typeof update === 'function' ? update(prev) : update;
     });
   }, []);
 
@@ -157,6 +164,10 @@ export function useStore() {
           return !(y === targetYear && m === (targetMonth + 1));
         });
         return [...filtered, ...shiftsWithIds];
+      });
+
+      syncMonthShiftsAction(targetYear, targetMonth, shiftsWithIds).catch((error) => {
+        logger.error('Erro ao sincronizar mês no servidor', error);
       });
 
       return shiftsWithIds;

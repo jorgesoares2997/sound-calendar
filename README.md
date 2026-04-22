@@ -1,36 +1,105 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sound Calendar
 
-## Getting Started
+Sistema de gestão de escalas de áudio com notificações via Telegram e e-mail.
 
-First, run the development server:
+## Stack
+
+- Next.js 16 + React 19 + TypeScript
+- Supabase Postgres (persistência de `members`, `shifts`, `settings`)
+- Server Actions para regras de backend
+
+## Rodar local com pnpm
+
+1. Instale dependências:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Crie o arquivo `.env.local`:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_URL=
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_USER=
+SMTP_PASS=
+SMTP_FROM=
+NEXT_PUBLIC_TEAM_NAME=Sound Team
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. Rode o projeto:
 
-## Learn More
+```bash
+pnpm dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Setup Supabase (externo)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Crie um projeto no Supabase.
+2. No projeto criado, copie:
+   - Project URL (`Settings > API`)
+   - service_role key (`Settings > API`)
+3. Instale a CLI:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+pnpm dlx supabase --version
+```
 
-## Deploy on Vercel
+4. Faça login:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+pnpm dlx supabase login
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+5. Linke seu projeto local ao Supabase remoto:
+
+```bash
+pnpm dlx supabase link --project-ref <SEU_PROJECT_REF>
+```
+
+6. Aplique migration do banco:
+
+```bash
+pnpm dlx supabase db push
+```
+
+Migration usada: `supabase/migrations/202604220001_init_sound_calendar.sql`.
+
+7. Migre os dados atuais do JSON para o banco:
+
+```bash
+pnpm db:migrate-json
+```
+
+## Deploy na Vercel
+
+Defina as variáveis de ambiente em `Project Settings > Environment Variables`:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_URL`
+- `TELEGRAM_BOT_TOKEN`
+- `TELEGRAM_CHAT_ID`
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_USER`
+- `SMTP_PASS`
+- `SMTP_FROM`
+- `NEXT_PUBLIC_TEAM_NAME`
+- `CRON_SECRET`
+
+Depois faça o deploy normalmente.
+
+## Automacao de notificacoes (Vercel Cron)
+
+O arquivo `vercel.json` ja configura:
+
+- semanal: segunda-feira as `06:00` (UTC) em `/api/notify/weekly`
+- diario: todos os dias as `06:00` (UTC) em `/api/notify/daily`
+
+O endpoint diario so envia notificacao quando houver escala para o dia; caso contrario ele retorna `skipped: true`.

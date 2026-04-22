@@ -1,269 +1,303 @@
 'use client';
 
 import { useState } from 'react';
-import { 
-  sendMonthlySummaryAction, 
-  sendWeeklySummaryAction, 
-  sendDailySummaryAction,
-  getNotificationDraftAction,
-  type SummaryType
-} from '@/app/actions/notifications';
 import { useAppStore } from '@/components/Providers';
-import { ShiftCard } from './ShiftCard';
-import { AddShiftModal } from './AddShiftModal';
-import type { Shift } from '@/types';
-import { 
-  Calendar, 
-  Clock, 
-  Zap, 
-  Search, 
-  Bot, 
-  Trash2,
-  Terminal,
-  Activity
-} from 'lucide-react';
+import {
+  getNotificationDraftAction,
+  sendDailySummaryAction,
+  sendMonthlySummaryAction,
+  sendWeeklySummaryAction,
+  type SummaryType,
+} from '@/app/actions/notifications';
 
 interface AutomationProps {
-  toast: { success: (m: string) => void; error: (m: string) => void };
+  toast: { success: (m: string) => void; error: (m: string) => void; info: (m: string) => void };
 }
 
 export function Automation({ toast }: AutomationProps) {
+  const { settings, setSettings: updateSettings } = useAppStore();
   const [loading, setLoading] = useState<string | null>(null);
-  const [preview, setPreview] = useState<{ type: string; content: string } | null>(null);
-  const [editingShift, setEditingShift] = useState<Shift | null>(null);
+  const [preview, setPreview] = useState<{ type: SummaryType; content: string } | null>(null);
 
-  const { shifts, members, deleteShift, clearAllShifts, updateShift } = useAppStore();
-
-  const handleNotify = async (type: SummaryType, action: () => Promise<any>) => {
-    setLoading(type);
-    const res = await action();
+  const handleManualSend = async (
+    type: SummaryType,
+    action: () => Promise<{ success?: boolean; error?: string; emailsSent?: number }>,
+  ) => {
+    setLoading(`send-${type}`);
+    const result = await action();
     setLoading(null);
-    if (res.success) {
-      toast.success(`Notificação enviada! (${res.emailsSent} e-mails)`);
-    } else {
-      toast.error(`Erro ao enviar: ${res.error}`);
+
+    if (result.success) {
+      const total = typeof result.emailsSent === 'number' ? ` (${result.emailsSent} e-mails)` : '';
+      toast.success(`Notificação enviada com sucesso${total}`);
+      return;
     }
+
+    toast.error(result.error || 'Falha ao enviar notificação');
   };
 
   const handlePreview = async (type: SummaryType) => {
     setLoading(`preview-${type}`);
-    const res = await getNotificationDraftAction(type);
+    const result = await getNotificationDraftAction(type);
     setLoading(null);
-    if (res.success && res.draft) {
-      setPreview({ type, content: res.draft });
-    } else {
-      toast.error(`Erro ao gerar prévia: ${res.error}`);
+
+    if (!result.success || !result.draft) {
+      toast.error(result.error || 'Falha ao gerar prévia');
+      return;
     }
+
+    setPreview({ type, content: result.draft });
   };
 
-  const sortedShifts = [...shifts].sort((a, b) => a.date.localeCompare(b.date));
-
   return (
-    <div className="flex flex-col gap-10 w-full max-w-5xl mx-auto pb-20">
-      {/* Module Header */}
-      <div className="px-1 flex items-center justify-between gap-6 flex-wrap">
-        <div className="flex flex-col">
-          <div className="flex items-center gap-2 mb-1">
-            <Bot size={10} className="text-accent-primary animate-pulse" />
-            <span className="mono-label text-[10px] text-accent-primary uppercase tracking-widest">ROBÔ_DE_ROTEAMENTO_SINAL // v3.0</span>
-          </div>
-          <h1 className="text-3xl font-black text-white tracking-tighter uppercase leading-tight">
-            Núcleo_de_Automação
-          </h1>
-        </div>
-        <button 
-          onClick={clearAllShifts}
-          className="px-6 py-2 rounded mono-label text-[10px] font-black bg-accent-red/5 border border-accent-red/20 text-accent-red hover:bg-accent-red/10 transition-all flex items-center gap-2 uppercase tracking-widest"
-        >
-          <Trash2 size={12} />
-          LIMPEZA_FORÇADA_DE_BUFFERS
-        </button>
-      </div>
+    <div className="p-6 lg:p-12 max-w-7xl mx-auto space-y-16 animate-fade-in">
+      {/* Header Section */}
+      <section className="space-y-4">
+        <h1 className="text-5xl font-light text-slate-900 dark:text-white tracking-tight">Central de Automação</h1>
+        <p className="text-lg text-slate-500 max-w-2xl font-medium">
+          Gerencie o ritmo criativo através de sinais e sequências orquestradas. Eficiência silenciosa, tempo perfeito.
+        </p>
+      </section>
 
-      {/* Main Control Rack */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <AutomationCard 
-          title="Resumo Mensal" 
-          desc="Roteia todos os módulos de sequência mensal para Telegram/Email."
-          code="[MES]"
-          icon={Calendar}
-          type="monthly"
-          loading={loading === 'monthly'}
-          isPreviewLoading={loading === 'preview-monthly'}
-          onSend={() => handleNotify('monthly', sendMonthlySummaryAction)}
-          onPreview={() => handlePreview('monthly')}
-        />
-        <AutomationCard 
-          title="Sequência Semanal" 
-          desc="Filtra a janela Seg-Dom e aciona a transmissão."
-          code="[SEM]"
-          icon={Clock}
-          type="weekly"
-          loading={loading === 'weekly'}
-          isPreviewLoading={loading === 'preview-weekly'}
-          onSend={() => handleNotify('weekly', sendWeeklySummaryAction)}
-          onPreview={() => handlePreview('weekly')}
-        />
-        <AutomationCard 
-          title="Sinal Diário" 
-          desc="Módulo de lembrete individual instantâneo para as tarefas de hoje."
-          code="[DIA]"
-          icon={Zap}
-          type="daily"
-          loading={loading === 'daily'}
-          isPreviewLoading={loading === 'preview-daily'}
-          onSend={() => handleNotify('daily', sendDailySummaryAction)}
-          onPreview={() => handlePreview('daily')}
-        />
-      </div>
-
-      {/* Module Monitor */}
-      <div className="studio-panel rounded-lg flex flex-col">
-        <div className="px-6 py-4 border-b border-white/[0.03] bg-black/20 flex items-center justify-between">
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <Activity size={10} className="text-text-muted animate-pulse" />
-              <span className="mono-label text-[9px] text-text-muted uppercase tracking-widest">MONITOR_DE_MÓDULO_ATIVO</span>
-            </div>
-            <span className="text-xs font-black text-white uppercase tracking-wider">Sequências Carregadas</span>
+      {/* Grid: Core Signals */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* Daily Signal */}
+        <div className="glass-card p-8 rounded-[32px] shadow-ambient border border-white/50 space-y-6 hover:-translate-y-1 transition-all duration-300">
+          <div className="w-12 h-12 bg-accent-primary/10 rounded-2xl flex items-center justify-center text-accent-primary">
+            <span className="material-symbols-outlined text-3xl">sunny</span>
           </div>
-          <div className="flex items-center gap-4">
-             <div className="vu-meter h-3 w-12">
-               {[...Array(4)].map((_, i) => <div key={i} className="vu-bar" style={{ animationDelay: `${i*0.2}s`, height: `${40 + i*15}%` }} />)}
-             </div>
-             <span className="mono-label text-[10px] text-accent-primary uppercase font-black">{shifts.length}_UNIDADES</span>
+          <div>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Sinal Diário</h3>
+            <p className="text-slate-500 text-sm font-medium">Lembretes automáticos enviados todas as manhãs para a equipe do dia.</p>
+          </div>
+          <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+            <span className="text-[10px] font-bold tracking-widest text-accent-primary uppercase">08:00 AM</span>
+            <button 
+              onClick={() => {
+                updateSettings((prev) => ({ ...prev, dailyReminder: !prev.dailyReminder }));
+                toast.info(`Sinal diário ${!settings.dailyReminder ? 'ativado' : 'desativado'}`);
+              }}
+              className={`w-12 h-6 rounded-full p-1 transition-all ${settings.dailyReminder ? 'bg-accent-primary' : 'bg-slate-200 dark:bg-slate-800'}`}
+            >
+              <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-all ${settings.dailyReminder ? 'translate-x-6' : 'translate-x-0'}`} />
+            </button>
           </div>
         </div>
 
-        <div className="p-6">
-          {shifts.length === 0 ? (
-            <div className="py-20 border border-dashed border-white/5 rounded flex flex-col items-center justify-center opacity-40">
-              <span className="mono-label text-[10px] uppercase tracking-[0.2em]">NENHUM_SINAL_DETECTADO_NO_BUFFER</span>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {sortedShifts.map(shift => (
-                <ShiftCard 
-                  key={shift.id}
-                  shift={shift}
-                  members={members}
-                  onDelete={() => deleteShift(shift.id)}
-                  onEdit={() => setEditingShift(shift)}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Technical Documentation Module */}
-      <div className="studio-panel rounded-lg p-8 border-l-4 border-accent-primary">
-        <h3 className="mono-label text-xs text-white font-black flex items-center gap-3 mb-6 uppercase tracking-[0.2em]">
-          <div className="w-8 h-8 rounded bg-accent-primary/10 border border-accent-primary/20 flex items-center justify-center">
-            <Terminal size={14} className="text-accent-primary" />
+        {/* Weekly Sequence */}
+        <div className="glass-card p-8 rounded-[32px] shadow-ambient border border-white/50 space-y-6 hover:-translate-y-1 transition-all duration-300">
+          <div className="w-12 h-12 bg-accent-secondary/10 rounded-2xl flex items-center justify-center text-accent-secondary">
+            <span className="material-symbols-outlined text-3xl">date_range</span>
           </div>
-          PROTOCOLO_DE_ACIONAMENTO_CRON_EXTERNO
-        </h3>
-        <div className="space-y-6">
-          <p className="text-xs text-text-secondary leading-relaxed uppercase tracking-tight">
-            Os sinais são processados e roteados via endpoints REST. Para transmissões recorrentes automatizadas,
-            interfira com a API interna usando o seguinte protocolo:
-          </p>
-          <div className="bg-black/60 border border-white/10 p-5 rounded-lg font-mono text-accent-cyan overflow-x-auto whitespace-pre text-[11px] leading-relaxed relative">
-            <div className="absolute top-2 right-3 mono-label text-[8px] text-text-muted">SHELL_STDOUT</div>
-{`# ACIONAR_SEQUÊNCIA_SEMANAL (SEG 08:00)
-curl -X POST https://sound-calendar.io/api/notify/weekly
-
-# ACIONAR_SINAL_DIÁRIO (DIARIAMENTE 07:00)
-curl -X POST https://sound-calendar.io/api/notify/daily`}
+          <div>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Sequência Semanal</h3>
+            <p className="text-slate-500 text-sm font-medium">Resumo da escala da próxima semana enviado todos os domingos.</p>
+          </div>
+          <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+            <span className="text-[10px] font-bold tracking-widest text-accent-primary uppercase">DOM 20:00</span>
+            <button className="w-12 h-6 bg-slate-200 dark:bg-slate-800 rounded-full p-1 opacity-50 cursor-not-allowed">
+              <div className="w-4 h-4 bg-white rounded-full shadow-sm" />
+            </button>
           </div>
         </div>
-      </div>
 
-      {/* Modals remain functionally the same but benefit from global studio styles */}
-      {editingShift && (
-        <AddShiftModal 
-          date={editingShift.date}
-          members={members}
-          onClose={() => setEditingShift(null)}
-          onSave={(data) => {
-            updateShift(editingShift.id, data);
-            setEditingShift(null);
-            toast.success('Escala atualizada!');
-          }}
-          initialData={editingShift}
-        />
-      )}
+        {/* Sync Protocol */}
+        <div className="glass-card p-8 rounded-[32px] shadow-ambient border border-white/50 space-y-6 hover:-translate-y-1 transition-all duration-300">
+          <div className="w-12 h-12 bg-accent-tertiary/10 rounded-2xl flex items-center justify-center text-accent-tertiary">
+            <span className="material-symbols-outlined text-3xl">sync</span>
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Protocolo de Sync</h3>
+            <p className="text-slate-500 text-sm font-medium">Sincronização em tempo real com calendários externos (Google/iCal).</p>
+          </div>
+          <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+            <span className="text-[10px] font-bold tracking-widest text-accent-primary uppercase">Real-time</span>
+            <button className="w-12 h-6 bg-slate-200 dark:bg-slate-800 rounded-full p-1 opacity-50 cursor-not-allowed">
+              <div className="w-4 h-4 bg-white rounded-full shadow-sm" />
+            </button>
+          </div>
+        </div>
+      </section>
 
-      {preview && (
-        <div 
-          className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[5000] flex items-center justify-center p-6 animate-fade-in"
-          onClick={() => setPreview(null)}
-        >
-          <div 
-            className="studio-panel rounded-lg p-8 w-full max-w-xl shadow-2xl animate-slide-up relative flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex flex-col">
-                <span className="mono-label text-[9px] text-accent-primary uppercase tracking-widest">VISUALIZAÇÃO_PRÉVIA</span>
-                <span className="text-xs font-black text-white uppercase tracking-widest">Rascunho de Carga Útil de Sinal</span>
+      {/* Manual Triggers */}
+      <section className="glass-card p-8 rounded-[32px] shadow-ambient border border-white/50 space-y-6">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Disparo Manual de Notificações</h2>
+            <p className="text-sm text-slate-500 font-medium mt-1">
+              Execute o envio mensal, semanal ou diário imediatamente, com prévia antes do disparo.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <ManualTriggerCard
+            title="Resumo Mensal"
+            subtitle="Escalas do mês atual"
+            sending={loading === 'send-monthly'}
+            previewing={loading === 'preview-monthly'}
+            onPreview={() => handlePreview('monthly')}
+            onSend={() => handleManualSend('monthly', sendMonthlySummaryAction)}
+          />
+          <ManualTriggerCard
+            title="Sequência Semanal"
+            subtitle="Janela da semana atual"
+            sending={loading === 'send-weekly'}
+            previewing={loading === 'preview-weekly'}
+            onPreview={() => handlePreview('weekly')}
+            onSend={() => handleManualSend('weekly', sendWeeklySummaryAction)}
+          />
+          <ManualTriggerCard
+            title="Sinal Diário"
+            subtitle="Escalas registradas para hoje"
+            sending={loading === 'send-daily'}
+            previewing={loading === 'preview-daily'}
+            onPreview={() => handlePreview('daily')}
+            onSend={() => handleManualSend('daily', sendDailySummaryAction)}
+          />
+        </div>
+      </section>
+
+      {/* Loaded Sequences & Protocol Info */}
+      <section className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+        <div className="lg:col-span-3 glass-card rounded-[32px] p-8 border border-white/50 shadow-ambient">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Sequências Ativas</h2>
+            <button className="text-xs font-bold text-accent-primary uppercase tracking-widest flex items-center gap-1 hover:underline">
+              Ver Todas <span className="material-symbols-outlined text-sm">chevron_right</span>
+            </button>
+          </div>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-5 bg-white/50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-4">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                <div>
+                  <p className="font-bold text-slate-800 dark:text-slate-200 uppercase tracking-tight text-sm">Telegram Signal Bot</p>
+                  <p className="text-[10px] text-slate-500 font-medium uppercase tracking-widest mt-0.5">Status: Conectado</p>
+                </div>
               </div>
-              <button onClick={() => setPreview(null)} className="w-8 h-8 rounded bg-white/5 border border-white/10 flex items-center justify-center mono-label text-[10px] font-black text-text-muted hover:text-white transition-all uppercase">DEL</button>
+              <span className="px-3 py-1 bg-green-500/10 text-green-600 text-[10px] font-bold uppercase rounded-full tracking-wider">Online</span>
             </div>
-            
-            <div className="bg-black/60 p-6 rounded border border-white/10 font-mono text-[12px] text-accent-primary/90 whitespace-pre-wrap max-h-[50vh] overflow-y-auto leading-relaxed shadow-inner">
-              {preview.content}
+            <div className="flex items-center justify-between p-5 bg-white/50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-800 opacity-50">
+              <div className="flex items-center gap-4">
+                <div className="w-2 h-2 bg-slate-300 rounded-full" />
+                <div>
+                  <p className="font-bold text-slate-800 dark:text-slate-200 uppercase tracking-tight text-sm">Email Digest</p>
+                  <p className="text-[10px] text-slate-500 font-medium uppercase tracking-widest mt-0.5">Status: Standby</p>
+                </div>
+              </div>
+              <span className="px-3 py-1 bg-slate-100 text-slate-400 text-[10px] font-bold uppercase rounded-full tracking-wider">Idle</span>
             </div>
+          </div>
+        </div>
 
-            <div className="mt-8 pt-6 border-t border-white/[0.03] flex flex-col gap-4">
-              <span className="mono-label text-[8px] text-text-muted text-center italic uppercase tracking-widest">PROTOCOLO_TRANSMISSÃO: TELEGRAM_HTML + SMTP_RELAY</span>
-              <button 
-                onClick={() => setPreview(null)}
-                className="w-full py-4 rounded mono-label text-xs font-black bg-white/5 text-text-secondary border border-white/10 hover:text-white hover:bg-white/10 transition-all uppercase tracking-widest"
-              >
-                FECHAR_JANELA_DE_VISUALIZAÇÃO
+        <div className="lg:col-span-2 glass-card rounded-[32px] p-8 border border-white/50 shadow-ambient bg-accent-primary text-white">
+          <h2 className="text-2xl font-bold mb-6 tracking-tight">Protocolo de Gatilho Externo</h2>
+          <div className="bg-white/10 rounded-2xl p-6 space-y-4 text-xs font-medium leading-relaxed backdrop-blur-sm">
+            <div className="flex flex-col gap-1">
+              <span className="text-[9px] uppercase tracking-widest opacity-60 font-bold">Endpoint de API</span>
+              <p className="font-bold">secure-relay.sound-calendar.io/v1/trigger</p>
+            </div>
+            <div className="h-px bg-white/10 my-4" />
+            <p className="opacity-80 italic">O motor de harmonia do estúdio permite que você acione lembretes via webhooks externos.</p>
+            <div className="pt-4 flex justify-between items-center">
+              <span className="text-[9px] font-bold opacity-60 uppercase tracking-widest">Ver. 2.4.0-Stable</span>
+              <button className="px-4 py-2 bg-white text-accent-primary rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-slate-100 transition-all">
+                Regerar Chave
               </button>
             </div>
           </div>
         </div>
+      </section>
+
+      {/* Bottom Visualization */}
+      <section className="h-48 rounded-[40px] relative overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-r from-accent-primary/20 to-accent-secondary/20 animate-pulse" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <div className="flex justify-center items-end gap-1.5 h-12">
+              {[0.4, 0.7, 0.3, 0.9, 0.5, 0.8, 0.4].map((h, i) => (
+                <div 
+                  key={i} 
+                  className="w-1 bg-accent-primary rounded-full animate-wave" 
+                  style={{ height: `${h * 100}%`, animationDelay: `${i * 0.1}s` }} 
+                />
+              ))}
+            </div>
+            <p className="text-[10px] font-bold text-slate-400 tracking-[0.3em] uppercase">Perfil de Som: Foco Calmo</p>
+          </div>
+        </div>
+      </section>
+
+      {preview && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-md z-[5000] flex items-center justify-center p-4"
+          onClick={() => setPreview(null)}
+        >
+          <div
+            className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl p-6 md:p-8"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-4 mb-6">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-accent-primary">Prévia</p>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white capitalize">
+                  Notificação {preview.type}
+                </h3>
+              </div>
+              <button
+                onClick={() => setPreview(null)}
+                className="px-3 py-2 text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 uppercase tracking-wider"
+              >
+                Fechar
+              </button>
+            </div>
+
+            <pre className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-xs whitespace-pre-wrap max-h-[55vh] overflow-auto text-slate-700 dark:text-slate-200">
+              {preview.content}
+            </pre>
+          </div>
+        </div>
       )}
     </div>
   );
 }
 
-function AutomationCard({ title, desc, code, icon: Icon, loading, isPreviewLoading, onSend, onPreview }: any) {
+interface ManualTriggerCardProps {
+  title: string;
+  subtitle: string;
+  sending: boolean;
+  previewing: boolean;
+  onPreview: () => void;
+  onSend: () => void;
+}
+
+function ManualTriggerCard({ title, subtitle, sending, previewing, onPreview, onSend }: ManualTriggerCardProps) {
+  const busy = sending || previewing;
+
   return (
-    <div className="studio-card rounded-lg p-6 flex flex-col gap-6 group hover:border-accent-primary/50">
-      <div className="flex items-center justify-between">
-        <div className="w-14 h-14 rounded bg-black/40 border border-white/10 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform text-accent-primary">
-          <Icon size={24} />
-        </div>
-        <button 
+    <div className="p-5 rounded-2xl border border-slate-200/70 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 space-y-4">
+      <div>
+        <h3 className="text-base font-bold text-slate-900 dark:text-white">{title}</h3>
+        <p className="text-xs text-slate-500 mt-1">{subtitle}</p>
+      </div>
+
+      <div className="flex gap-2">
+        <button
           onClick={onPreview}
-          disabled={loading || isPreviewLoading}
-          className="px-2 h-10 rounded bg-white/5 border border-white/10 flex items-center justify-center text-text-secondary hover:bg-accent-primary/20 hover:text-accent-primary transition-all disabled:opacity-30"
-          title="PRÉVIA_SINAL"
+          disabled={busy}
+          className="flex-1 px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-widest bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 disabled:opacity-50"
         >
-          {isPreviewLoading ? '...' : <Search size={16} />}
+          {previewing ? 'Gerando...' : 'Prévia'}
+        </button>
+        <button
+          onClick={onSend}
+          disabled={busy}
+          className="flex-1 px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-widest bg-accent-primary text-white disabled:opacity-50"
+        >
+          {sending ? 'Enviando...' : 'Enviar'}
         </button>
       </div>
-      <div>
-        <h4 className="text-sm font-black text-white uppercase tracking-tight">{title}</h4>
-        <p className="text-[10px] text-text-muted mt-2 leading-relaxed h-8 line-clamp-2 uppercase">{desc}</p>
-      </div>
-      <button 
-        onClick={onSend}
-        disabled={loading || isPreviewLoading}
-        className={`
-          w-full py-3 rounded mono-label text-[10px] font-black transition-all border uppercase tracking-widest
-          ${loading ? 'bg-white/5 border-white/10 text-text-muted cursor-wait' : 'bg-accent-primary/5 border-accent-primary/20 text-accent-primary hover:bg-accent-primary hover:text-white shadow-neon'}
-        `}
-      >
-        {loading ? 'STATUS_TX_OCUPADO...' : 'EXECUTAR_SINAL_DE_TRANSMISSÃO'}
-      </button>
     </div>
   );
 }
-
-

@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Manrope } from 'next/font/google';
 import './globals.css';
 import { StoreProvider } from '@/components/Providers';
 import { MainLayout } from '@/components/MainLayout';
+import { ThemeProvider } from '@/components/ThemeProvider';
 
-const inter = Inter({
+const manrope = Manrope({
   subsets: ['latin'],
   variable: '--font-sans',
+  weight: ['200', '300', '400', '500', '600', '700', '800'],
   display: 'swap',
 });
 
@@ -14,45 +16,35 @@ export const viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
-  themeColor: '#8b5cf6',
+  themeColor: '#3e5e82',
 };
 
 export const metadata: Metadata = {
-  title: 'Sound Calendar // Sincronização de Frequências de Equipe',
-  description: 'Sistema de precisão para gerenciamento de escalas técnicas e roteamento de sinais de notificação via Telegram. Estúdio de controle de pessoal Sound Team.',
-  keywords: ['sound engineering', 'escala de som', 'calendário técnico', 'automação telegram', 'equipe de som', 'broadcast scheduling'],
-  authors: [{ name: 'Sound Team Engineering' }],
+  title: 'Sound Calendar // Studio Rhythm Control',
+  description: 'An organic, minimalist tool for technical scheduling. Designed for creative studios and sound engineering teams.',
+  keywords: ['studio planning', 'sound engineering', 'minimalist calendar', 'technical schedule', 'creative automation'],
+  authors: [{ name: 'Sound Calendar Design System' }],
   icons: {
-    icon: [
-      { url: '/favicon.png' },
-      { url: '/favicon.png', sizes: '32x32', type: 'image/png' },
-    ],
-    shortcut: '/favicon.png',
-    apple: '/favicon.png',
+    icon: '/icon.png',
+    shortcut: '/icon.png',
+    apple: '/icon.png',
   },
   openGraph: {
-    title: 'Sound Calendar // Studio Control Room',
-    description: 'Gestão técnica de escalas com roteamento de sinal em tempo real.',
+    title: 'Sound Calendar // Studio Rhythm Control',
+    description: 'An organic, minimalist tool for technical scheduling.',
     type: 'website',
     locale: 'pt_BR',
     siteName: 'Sound Calendar',
   }
 };
 
-import { ThemeProvider } from '@/components/ThemeProvider';
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={inter.variable}>
+    <html lang="pt-BR" className={manrope.variable}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
-          rel="stylesheet"
-        />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" />
       </head>
-      <body className="bg-bg-base text-text-primary antialiased min-h-screen">
+      <body className="bg-bg-base text-text-primary antialiased min-h-screen selection:bg-accent-primary/10 selection:text-accent-primary">
         <ThemeProvider>
           <StoreProvider>
             <MainLayout>

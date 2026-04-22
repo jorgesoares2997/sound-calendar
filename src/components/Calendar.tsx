@@ -6,15 +6,6 @@ import { buildReminderMessage, sendTelegramMessage } from '@/utils/telegram';
 import { getEnvConfigStatusAction } from '@/app/actions/telegram';
 import { ShiftCard } from './ShiftCard';
 import { AddShiftModal } from './AddShiftModal';
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  Plus, 
-  Calendar as CalendarIcon, 
-  Bell, 
-  RefreshCcw,
-  Signal
-} from 'lucide-react';
 
 const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const MONTHS = [
@@ -23,12 +14,12 @@ const MONTHS = [
 ];
 
 export const SHIFT_TYPES: { value: ShiftType; label: string; color: string }[] = [
-  { value: 'manha', label: 'MANHÃ', color: '#f59e0b' },
-  { value: 'tarde', label: 'TARDE', color: '#06b6d4' },
-  { value: 'noite', label: 'NOITE', color: '#8b5cf6' },
-  { value: 'culto', label: 'CULTO', color: '#7c3aed' },
-  { value: 'ensaio', label: 'ENSAIO', color: '#22c55e' },
-  { value: 'evento', label: 'EVENTO', color: '#ef4444' },
+  { value: 'manha', label: 'MANHÃ', color: '#3e5e82' },
+  { value: 'tarde', label: 'TARDE', color: '#4b6458' },
+  { value: 'noite', label: 'NOITE', color: '#5f5c55' },
+  { value: 'culto', label: 'CULTO', color: '#3e5e82' },
+  { value: 'ensaio', label: 'ENSAIO', color: '#4b6458' },
+  { value: 'evento', label: 'EVENTO', color: '#ba1a1a' },
 ];
 
 export function getShiftMeta(type: ShiftType) {
@@ -108,13 +99,9 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
 
   const handleSendReminder = async (shift: Shift) => {
     const isConfigured = (settings.botToken && settings.groupChatId) || (envStatus?.hasToken && envStatus?.hasChatId);
-    
-    if (!isConfigured) {
-      toast.error('Configure o bot e Chat ID em Ajustes ou no servidor (.env) primeiro.');
-      return;
-    }
+    if (!isConfigured) { toast.error('Configure o bot e Chat ID primeiro.'); return; }
     const assigned = shift.memberIds.map((id) => members.find((m) => m.id === id)).filter(Boolean) as Member[];
-    if (assigned.length === 0) { toast.error('Nenhum membro atribuído a esta escala.'); return; }
+    if (assigned.length === 0) { toast.error('Nenhum membro atribuído.'); return; }
 
     setSendingId(shift.id);
     let ok = 0;
@@ -122,206 +109,161 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
       const text = buildReminderMessage(settings.reminderMessage, member, shift);
       const res = await sendTelegramMessage(settings.botToken, settings.groupChatId, text);
       if (res.ok) ok++;
-      else toast.error(`Erro ao enviar para ${member.name}: ${res.error}`);
     }
     setSendingId(null);
     if (ok > 0) toast.success(`${ok} lembrete(s) enviado(s)!`);
   };
 
   return (
-    <div className="flex flex-col xl:grid xl:grid-cols-[1fr_320px] gap-8">
-      {/* ─── Main Console Grid ─── */}
-      <div className="studio-panel rounded-lg overflow-hidden flex flex-col">
-        {/* Module Header */}
-        <div className="px-6 py-5 border-b border-white/[0.03] flex items-center justify-between gap-4 flex-wrap bg-black/20">
-          <div className="flex items-center gap-6">
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <CalendarIcon size={10} className="text-accent-primary" />
-                <span className="mono-label text-[9px] text-accent-primary uppercase tracking-widest">BANCO_DE_SEQUÊNCIA</span>
-              </div>
-              <h2 className="text-xl font-black text-white tracking-tighter uppercase">
-                {MONTHS[viewMonth]} {viewYear}
-              </h2>
-            </div>
-            
-            <div className="flex items-center gap-1.5 p-1 bg-black/40 border border-white/5 rounded">
-              <button id="prev-month" onClick={prevMonth}
-                className="w-10 h-8 rounded bg-white/5 border border-white/10 text-text-secondary hover:text-white hover:bg-white/10 transition-all flex items-center justify-center">
-                <ChevronLeft size={14} />
-              </button>
-              <button id="next-month" onClick={nextMonth}
-                className="w-10 h-8 rounded bg-white/5 border border-white/10 text-text-secondary hover:text-white hover:bg-white/10 transition-all flex items-center justify-center">
-                <ChevronRight size={14} />
-              </button>
-            </div>
+    <div className="flex flex-col lg:flex-row gap-12 animate-fade-in">
+      {/* Calendar Section */}
+      <div className="flex-1">
+        <div className="flex items-center justify-between mb-10">
+          <div>
+            <h2 className="text-4xl font-light text-slate-900 dark:text-white tracking-tight">
+              {MONTHS[viewMonth]} {viewYear}
+            </h2>
+            <p className="text-slate-500 font-medium mt-1">
+              {shifts.filter(s => s.date.startsWith(`${viewYear}-${String(viewMonth+1).padStart(2, '0')}`)).length} sessões programadas
+            </p>
           </div>
-
-          <button id="btn-today" onClick={() => { setViewYear(today.getFullYear()); setViewMonth(today.getMonth()); setSelectedDate(todayStr); }}
-            className="px-4 py-2 rounded mono-label bg-white/5 border border-white/10 text-text-secondary hover:text-white hover:bg-accent-primary/20 hover:border-accent-primary/40 transition-all text-[10px] font-black flex items-center gap-2">
-            <RefreshCcw size={10} />
-            RESETAR_PARA_HOJE
-          </button>
+          <div className="flex items-center gap-4 bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl shadow-sm">
+            <button onClick={prevMonth} className="p-2 hover:bg-white dark:hover:bg-slate-700 rounded-xl transition-all">
+              <span className="material-symbols-outlined">chevron_left</span>
+            </button>
+            <button onClick={() => { setViewYear(today.getFullYear()); setViewMonth(today.getMonth()); }} className="px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-400">Hoje</button>
+            <button onClick={nextMonth} className="p-2 hover:bg-white dark:hover:bg-slate-700 rounded-xl transition-all">
+              <span className="material-symbols-outlined">chevron_right</span>
+            </button>
+          </div>
         </div>
 
-        <div className="p-6">
-          {/* Weekdays Grid */}
-          <div className="grid grid-cols-7 mb-4 border-b border-white/5 pb-2">
-            {WEEKDAYS.map((w) => (
-              <div key={w} className="text-center mono-label text-text-muted font-bold tracking-[0.2em] uppercase">
-                {w}
+        <div className="glass-card rounded-[32px] overflow-hidden border border-white/50 shadow-ambient bg-white/40 dark:bg-slate-900/40">
+          {/* Grid Container with horizontal scroll on mobile */}
+          <div className="overflow-x-auto custom-scrollbar">
+            <div className="min-w-[700px] lg:min-w-0">
+              {/* Weekday Labels */}
+              <div className="grid grid-cols-7 bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-200/50 dark:border-slate-700/50">
+                {WEEKDAYS.map((w) => (
+                  <div key={w} className="py-4 text-center text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+                    {w}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          {/* Sequencer Grid */}
-          <div className="grid grid-cols-7 gap-1">
+              {/* Grid */}
+              <div className="grid grid-cols-7 min-h-[500px] lg:min-h-[600px]">
             {calendarDays.map((day, idx) => {
-              if (!day) return <div key={`e-${idx}`} className="aspect-square opacity-20 border border-white/[0.02]" />;
+              if (!day) return <div key={`e-${idx}`} className="border-r border-b border-slate-100/50 dark:border-slate-800/50 bg-slate-50/20" />;
               const dateStr = toISODate(viewYear, viewMonth, day);
               const dayShifts = getShiftsForDay(day);
               const isToday = dateStr === todayStr;
               const isSelected = dateStr === selectedDate;
+
               return (
                 <button
                   key={dateStr}
-                  id={`day-${dateStr}`}
                   onClick={() => setSelectedDate(dateStr)}
                   className={`
-                    aspect-square flex flex-col items-center justify-center gap-1 border transition-all relative group
-                    ${isToday ? 'bg-accent-primary/10 border-accent-primary shadow-[inset_0_0_15px_var(--color-accent-primary)] text-white' : ''}
-                    ${isSelected && !isToday ? 'bg-white/5 border-white/20 text-white' : ''}
-                    ${!isToday && !isSelected ? 'bg-black/20 border-white/[0.03] text-text-muted hover:border-white/20 hover:text-white hover:bg-white/[0.02]' : ''}
+                    border-r border-b border-slate-100/50 dark:border-slate-800/50 p-4 relative group transition-all min-h-[100px] flex flex-col items-start gap-2
+                    ${isSelected ? 'bg-accent-primary/5 dark:bg-accent-primary/10' : 'hover:bg-white/50 dark:hover:bg-slate-800/50'}
                   `}
                 >
-                  <span className="text-xs font-black mono-label z-10">{String(day).padStart(2, '0')}</span>
+                  <span className={`text-sm font-bold ${isToday ? 'text-accent-primary' : 'text-slate-400 dark:text-slate-600'}`}>
+                    {day}
+                  </span>
                   
-                  {/* Signal Indicators */}
-                  <div className="flex gap-0.5">
-                    {dayShifts.length > 0 ? (
-                      dayShifts.slice(0, 4).map((s) => (
-                        <span key={s.id} className="w-1 h-1 rounded-full animate-pulse" style={{ backgroundColor: getShiftMeta(s.type).color, boxShadow: `0 0 5px ${getShiftMeta(s.type).color}` }} />
-                      ))
-                    ) : (
-                      <span className="w-1 h-1 rounded-full bg-white/5" />
+                  <div className="flex flex-col gap-1 w-full">
+                    {dayShifts.slice(0, 3).map((s) => (
+                      <div 
+                        key={s.id} 
+                        className="h-1.5 w-full rounded-full opacity-60"
+                        style={{ backgroundColor: getShiftMeta(s.type).color }}
+                      />
+                    ))}
+                    {dayShifts.length > 3 && (
+                      <span className="text-[8px] font-black text-slate-400 uppercase">+{dayShifts.length - 3} mais</span>
                     )}
                   </div>
 
-                  {/* Hover Scanline Effect */}
-                  <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-10 bg-gradient-to-b from-transparent via-white to-transparent h-2 w-full animate-[scanline_2s_linear_infinite]" />
+                  {isToday && (
+                    <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-accent-primary shadow-[0_0_8px_var(--color-accent-primary)]" />
+                  )}
                 </button>
               );
             })}
+              </div>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Selected Data Module */}
-        {selectedDate && (
-          <div className="mt-auto border-t border-white/[0.05] bg-black/40 p-6 animate-slide-up">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex flex-col">
-                <span className="mono-label text-[9px] text-text-muted uppercase tracking-widest">TIMESTAMP_SELECIONADO</span>
-                <span className="text-sm font-black text-white uppercase tracking-wider">
-                  {formatLong(selectedDate)}
-                </span>
-              </div>
-              <button id="btn-add-shift" onClick={() => setShowModal(true)}
-                className="px-6 py-2 rounded text-[10px] font-black uppercase bg-accent-primary text-white shadow-neon hover:brightness-110 active:scale-95 transition-all tracking-widest flex items-center gap-2">
-                <Plus size={14} />
-                NOVA_ENTRADA
-              </button>
-            </div>
+      {/* Side Panel */}
+      <aside className="w-full lg:w-[360px] flex flex-col gap-8">
+        <div className="glass-card p-8 rounded-[32px] border border-white/50 shadow-ambient flex flex-col">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Próximos Módulos</h3>
+            <span className="text-[10px] font-bold text-accent-primary bg-accent-primary/10 px-3 py-1 rounded-full uppercase tracking-wider">7 Dias</span>
+          </div>
 
-            {shiftsForSelected.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {shiftsForSelected.map((shift) => (
-                  <ShiftCard
-                    key={shift.id}
-                    shift={shift}
-                    members={members}
-                    onDelete={() => onDeleteShift(shift.id)}
-                    onSendReminder={() => handleSendReminder(shift)}
-                    isSending={sendingId === shift.id}
-                  />
-                ))}
+          <div className="flex flex-col gap-6">
+            {upcomingShifts.length === 0 ? (
+              <div className="py-12 text-center opacity-40">
+                <p className="text-xs font-medium uppercase tracking-widest">Nenhum sinal detectado</p>
               </div>
             ) : (
-              <div className="py-8 border border-dashed border-white/5 rounded flex flex-col items-center justify-center opacity-40">
-                <span className="mono-label text-[10px] uppercase tracking-[0.2em]">SEM_DADOS_NO_ALVO</span>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* ─── Monitoring / Playlist Rack ─── */}
-      <div className="flex flex-col gap-6">
-        <div className="studio-panel rounded-lg p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <Signal size={10} className="text-accent-green" />
-                <span className="mono-label text-[9px] text-accent-green uppercase tracking-widest">FILA_DE_SINAL</span>
-              </div>
-              <span className="text-xs font-black text-white uppercase tracking-tighter">Próximos Módulos</span>
-            </div>
-            <div className="px-2 py-1 rounded bg-accent-cyan/10 border border-accent-cyan/20 text-accent-cyan mono-label text-[9px] font-black">
-              {upcomingShifts.length}_ATIVOS
-            </div>
-          </div>
-
-          {upcomingShifts.length === 0 ? (
-            <div className="py-10 text-center border border-dashed border-white/5 rounded">
-              <p className="mono-label text-[9px] text-text-muted uppercase">FILA_VAZIA</p>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-3">
-              {upcomingShifts.map((shift) => {
-                const meta = getShiftMeta(shift.type);
-                const d = parseDate(shift.date);
-                const shiftMembers = shift.memberIds
-                  .map((id) => members.find((m) => m.id === id))
-                  .filter(Boolean) as Member[];
-                return (
-                  <div key={shift.id} className="studio-card p-4 rounded border-l-2" style={{ borderLeftColor: meta.color }}>
-                    <div className="flex justify-between items-start mb-3">
-                      <span className="mono-label text-[8px] px-1.5 py-0.5 rounded border border-white/10 text-text-secondary bg-black/40 uppercase font-black">
-                        {d.toLocaleDateString('pt-BR', { weekday: 'short' }).toUpperCase()}
-                      </span>
-                      <span className="mono-label text-[10px] text-white font-black">{shift.date.split('-').slice(1).reverse().join('/')}</span>
+              upcomingShifts.map((shift) => (
+                <div key={shift.id} className="group cursor-pointer">
+                  <div className="flex items-start gap-4 mb-3">
+                    <div className="w-12 h-12 rounded-2xl bg-accent-primary/10 flex items-center justify-center text-accent-primary flex-shrink-0">
+                      <span className="material-symbols-outlined">{getShiftMeta(shift.type).value === 'culto' ? 'church' : 'graphic_eq'}</span>
                     </div>
-                    
-                    <div className="text-xs font-black text-white uppercase mb-1 truncate tracking-tight">{shift.title}</div>
-                    
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="signal-led signal-led-active" style={{ backgroundColor: meta.color, boxShadow: `0 0 5px ${meta.color}` }} />
-                      <span className="mono-label text-[9px] text-text-muted uppercase">{shift.startTime} {shift.endTime ? `- ${shift.endTime}` : ''}</span>
+                    <div className="flex-1">
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-accent-primary transition-colors uppercase tracking-tight">{shift.title}</h4>
+                      <p className="text-xs text-slate-500 mt-0.5 font-medium">{shift.startTime} - {shift.date.split('-').reverse().slice(0, 2).join('/')}</p>
                     </div>
-
-                    <div className="flex flex-wrap gap-1 mb-4">
-                      {shiftMembers.map((m) => (
-                        <span key={m.id} className="mono-label text-[8px] px-1.5 py-0.5 rounded bg-black/40 border border-white/5 text-text-secondary uppercase">
-                          {m.name.split(' ')[0]}
-                        </span>
-                      ))}
-                    </div>
-
-                    <button
-                      id={`send-upcoming-${shift.id}`}
-                      onClick={() => handleSendReminder(shift)}
-                      disabled={sendingId === shift.id}
-                      className="w-full py-2 rounded text-[9px] font-black uppercase bg-telegram text-white hover:brightness-110 disabled:opacity-50 transition-all active:scale-95 tracking-[0.1em]">
-                      {sendingId === shift.id ? 'ENVIANDO_SINAL...' : 'ENVIAR_LEMBRETE'}
+                  </div>
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleSendReminder(shift); }}
+                      className="text-[10px] font-bold text-accent-primary hover:underline flex items-center gap-1 uppercase tracking-widest"
+                    >
+                      {sendingId === shift.id ? 'Enviando...' : 'Enviar Lembrete'}
+                      <span className="material-symbols-outlined text-[14px]">send</span>
                     </button>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
+                </div>
+              ))
+            )}
+          </div>
 
-      {/* Rack Modal */}
+          <button className="w-full mt-8 py-3 text-xs font-bold text-slate-500 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors uppercase tracking-widest">
+            Ver Tudo
+          </button>
+        </div>
+
+        {/* Selected Date Actions */}
+        {selectedDate && (
+          <div className="glass-card p-8 rounded-[32px] border border-white/50 bg-accent-primary text-white shadow-lift animate-slide-up">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest opacity-70 mb-4">{formatLong(selectedDate)}</h4>
+            <div className="flex flex-col gap-4">
+              {shiftsForSelected.map(s => (
+                <div key={s.id} className="flex items-center justify-between py-2 border-b border-white/10">
+                  <span className="text-sm font-bold uppercase tracking-tight">{s.title}</span>
+                  <span className="text-xs opacity-70">{s.startTime}</span>
+                </div>
+              ))}
+              <button 
+                onClick={() => setShowModal(true)}
+                className="w-full mt-4 bg-white text-accent-primary py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-slate-50 active:scale-95 transition-all shadow-md"
+              >
+                + Nova Entrada
+              </button>
+            </div>
+          </div>
+        )}
+      </aside>
+
       {showModal && selectedDate && (
         <AddShiftModal
           date={selectedDate}
@@ -337,5 +279,3 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
     </div>
   );
 }
-
-

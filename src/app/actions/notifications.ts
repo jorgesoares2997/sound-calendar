@@ -1,15 +1,13 @@
 'use server';
 
 import { getShiftsAction } from './shifts';
+import { getMembersAction } from './members';
 import { sendTelegramMessageAction } from './telegram';
 import { sendEmailAction } from './email';
-import initialMembers from '@/data/members.json';
 import { format, parseISO, isSameDay, isWithinInterval, startOfWeek, endOfWeek } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { Member, Shift } from '@/types';
 import { logger } from '@/utils/logger';
-
-const members = initialMembers as Member[];
 const ESCAPE_MAP: Record<string, string> = {
   '&': '&amp;',
   '<': '&lt;',
@@ -20,7 +18,7 @@ function escapeHTML(str: string): string {
   return str.replace(/[&<>]/g, (tag) => ESCAPE_MAP[tag] || tag);
 }
 
-function getMemberInfo(ids: string[], useTags = false) {
+function getMemberInfo(ids: string[], members: Member[], useTags = false) {
   if (ids.length === 0) return 'Ninguém escalado';
   
   return ids.map(id => {
@@ -36,7 +34,7 @@ function getMemberInfo(ids: string[], useTags = false) {
   }).join(', ');
 }
 
-function getMemberEmails(shifts: Shift[]) {
+function getMemberEmails(shifts: Shift[], members: Member[]) {
   const memberIds = new Set<string>();
   shifts.forEach(s => s.memberIds.forEach(id => memberIds.add(id)));
   
@@ -50,7 +48,7 @@ export type SummaryType = 'monthly' | 'weekly' | 'daily';
 export async function getNotificationDraftAction(type: SummaryType): Promise<{ success: boolean; draft?: string; error?: string; emails?: string[] }> {
   try {
     logger.info(`Generating notification draft for type: ${type}`);
-    const shifts = await getShiftsAction();
+    const [shifts, members] = await Promise.all([getShiftsAction(), getMembersAction()]);
     const now = new Date();
     let message = '';
     let targetShifts: Shift[] = [];
@@ -69,7 +67,7 @@ export async function getNotificationDraftAction(type: SummaryType): Promise<{ s
       message = '📅 <b>ESCALA MENSAL - ' + escapeHTML(format(now, 'MMMM/yyyy', { locale: ptBR }).toUpperCase()) + '</b>\n\n';
       targetShifts.forEach(s => {
         const date = format(parseISO(s.date), "dd/MM ' ('eee')'", { locale: ptBR });
-        message += '• ' + date + ': ' + s.startTime + ' - <b>' + getMemberInfo(s.memberIds, true) + '</b> (' + escapeHTML(s.title) + ')\n';
+        message += '• ' + date + ': ' + s.startTime + ' - <b>' + getMemberInfo(s.memberIds, members, true) + '</b> (' + escapeHTML(s.title) + ')\n';
       });
     } 
     else if (type === 'weekly') {
@@ -89,7 +87,7 @@ export async function getNotificationDraftAction(type: SummaryType): Promise<{ s
       message = '🗓️ <b>ESCALA DA SEMANA (' + format(start, 'dd/MM') + ' a ' + format(end, 'dd/MM') + ')</b>\n\n';
       targetShifts.forEach(s => {
         const date = format(parseISO(s.date), "dd/MM ' ('eee')'", { locale: ptBR });
-        message += '• ' + date + ': ' + s.startTime + ' - <b>' + getMemberInfo(s.memberIds, true) + '</b>\n';
+        message += '• ' + date + ': ' + s.startTime + ' - <b>' + getMemberInfo(s.memberIds, members, true) + '</b>\n';
       });
     } 
     else if (type === 'daily') {
@@ -103,7 +101,7 @@ export async function getNotificationDraftAction(type: SummaryType): Promise<{ s
       targetShifts.forEach(s => {
         message += '⏰ ' + s.startTime + '\n';
         message += '📍 ' + escapeHTML(s.title) + '\n';
-        message += '👤 Técnico: <b>' + getMemberInfo(s.memberIds, true) + '</b>\n\n';
+        message += '👤 Técnico: <b>' + getMemberInfo(s.memberIds, members, true) + '</b>\n\n';
       });
     }
 
@@ -111,7 +109,7 @@ export async function getNotificationDraftAction(type: SummaryType): Promise<{ s
     return { 
       success: true, 
       draft: message,
-      emails: getMemberEmails(targetShifts)
+      emails: getMemberEmails(targetShifts, members)
     };
   } catch (error) {
     logger.error(`Error in getNotificationDraftAction (${type})`, error);

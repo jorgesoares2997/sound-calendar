@@ -1,7 +1,6 @@
 'use client';
 
 import type { Member } from '@/types';
-import { Users, Radio, Database, Mail, UserCheck, UserMinus, AtSign } from 'lucide-react';
 
 interface MembersProps {
   members: Member[];
@@ -13,67 +12,60 @@ export function Members({ members, onUpdate }: MembersProps) {
   const inactive = members.filter((m) => !m.active);
 
   return (
-    <div className="flex flex-col gap-10 max-w-5xl mx-auto pb-20">
-      {/* Module Header */}
-      <div className="flex flex-col">
-        <div className="flex items-center gap-2 mb-1">
-          <Users size={12} className="text-accent-primary" />
-          <span className="mono-label text-[10px] text-accent-primary uppercase tracking-widest">BANCO_DADOS_OPERADORES // v4.1</span>
+    <div className="p-6 lg:p-12 max-w-7xl mx-auto animate-fade-in">
+      {/* Page Header */}
+      <div className="mb-12">
+        <h2 className="text-5xl font-light text-slate-900 dark:text-white tracking-tight">Diretório de Equipe</h2>
+        <p className="text-lg text-slate-500 mt-3 max-w-2xl font-medium">
+          Conecte-se com os criadores, arquitetos e diretores por trás do ecossistema Sound Calendar.
+        </p>
+      </div>
+
+      {/* Stats Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+        <div className="glass-card p-6 rounded-3xl flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-accent-primary/10 flex items-center justify-center text-accent-primary">
+            <span className="material-symbols-outlined">groups</span>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Total no Estúdio</p>
+            <p className="text-xl font-bold text-slate-900 dark:text-white">{members.length} Membros</p>
+          </div>
         </div>
-        <h1 className="text-3xl font-black text-white tracking-tighter uppercase leading-tight">
-          Diretório_de_Equipe
-        </h1>
+        <div className="glass-card p-6 rounded-3xl flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-accent-secondary/10 flex items-center justify-center text-accent-secondary">
+            <span className="material-symbols-outlined">pulse_alert</span>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Ativos Agora</p>
+            <p className="text-xl font-bold text-slate-900 dark:text-white">{active.length} Online</p>
+          </div>
+        </div>
+        <div className="glass-card p-6 rounded-3xl flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-accent-tertiary/10 flex items-center justify-center text-accent-tertiary">
+            <span className="material-symbols-outlined">hub</span>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Em Standby</p>
+            <p className="text-xl font-bold text-slate-900 dark:text-white">{inactive.length} Unidades</p>
+          </div>
+        </div>
       </div>
 
-      {/* Rack Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {[
-          { num: members.length, label: 'TOTAL_UNIDADES', color: 'text-white', icon: Database },
-          { num: active.length, label: 'LINK_ATIVO', color: 'text-accent-green', icon: UserCheck },
-          { num: inactive.length, label: 'MODO_BYPASS', color: 'text-text-muted', icon: UserMinus },
-          { num: members.filter((m) => m.telegramId).length, label: 'REMOTO_PRONTO', color: 'text-telegram', icon: Radio },
-        ].map((s) => (
-          <div key={s.label} className="studio-panel rounded-lg p-5 group hover:border-accent-primary/40 transition-all">
-            <div className="flex items-center justify-between mb-2">
-              <div className={`text-4xl font-black mono-label ${s.color}`}>{String(s.num).padStart(2, '0')}</div>
-              <s.icon size={20} className={s.color} />
-            </div>
-            <div className="mono-label text-[9px] text-text-muted mt-2 tracking-[0.2em] uppercase">{s.label}</div>
-          </div>
+      {/* Team Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {members.map((m) => (
+          <MemberCard key={m.id} member={m} onToggle={onUpdate} />
         ))}
-      </div>
-
-      {/* Database Display */}
-      <div className="flex flex-col gap-8">
-        {active.length > 0 && (
-          <div className="flex flex-col gap-6">
-            <div className="flex items-center gap-3">
-              <div className="signal-led signal-led-active" />
-              <span className="mono-label text-[10px] text-white font-black uppercase tracking-widest">Operadores_Ativos</span>
-              <div className="h-[1px] flex-1 bg-white/5" />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {active.map((m) => (
-                <MemberCard key={m.id} member={m} onToggle={onUpdate} />
-              ))}
-            </div>
+        
+        {/* Add Member Placeholder */}
+        <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 p-8 rounded-[32px] flex flex-col items-center justify-center text-center group hover:border-accent-primary/40 transition-all cursor-pointer min-h-[320px]">
+          <div className="w-16 h-16 rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center mb-4 group-hover:bg-accent-primary/5 transition-colors">
+            <span className="material-symbols-outlined text-slate-400 group-hover:text-accent-primary transition-colors">person_add</span>
           </div>
-        )}
-
-        {inactive.length > 0 && (
-          <div className="flex flex-col gap-6">
-            <div className="flex items-center gap-3 opacity-40">
-              <div className="signal-led" style={{ backgroundColor: '#333' }} />
-              <span className="mono-label text-[10px] text-text-muted font-black uppercase tracking-widest">Operadores_em_Standby</span>
-              <div className="h-[1px] flex-1 bg-white/5" />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 opacity-50 grayscale hover:grayscale-0 transition-all">
-              {inactive.map((m) => (
-                <MemberCard key={m.id} member={m} onToggle={onUpdate} />
-              ))}
-            </div>
-          </div>
-        )}
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white">Adicionar Membro</h3>
+          <p className="text-xs text-slate-400 font-medium mt-2">Convide novos talentos para o estúdio</p>
+        </div>
       </div>
     </div>
   );
@@ -85,60 +77,53 @@ function MemberCard({ member: m, onToggle }: {
 }) {
   const initials = m.name.split(' ').map((n) => n[0]).slice(0, 2).join('');
   return (
-    <div className="studio-card rounded-lg p-5 flex flex-col gap-5 relative overflow-hidden group">
-      {/* Module Strip */}
-      <div className="absolute top-0 left-0 bottom-0 w-1" style={{ backgroundColor: m.color, boxShadow: `0 0 5px ${m.color}` }} />
-
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded bg-black/40 border border-white/10 flex items-center justify-center text-base font-black shadow-inner uppercase"
-            style={{ color: m.color }}>
+    <div className={`glass-card p-8 rounded-[32px] transition-all duration-300 hover:-translate-y-1 hover:shadow-lift group flex flex-col ${!m.active ? 'opacity-60 grayscale' : ''}`}>
+      <div className="flex justify-between items-start mb-6">
+        <div className="relative">
+          <div 
+            className="w-20 h-20 rounded-2xl flex items-center justify-center text-xl font-bold text-white shadow-lift uppercase"
+            style={{ backgroundColor: m.color }}
+          >
             {initials}
           </div>
-          <div>
-            <div className="text-sm font-black text-white uppercase tracking-tight">{m.name}</div>
-            <div className="mono-label text-[9px] text-text-muted uppercase tracking-widest">{m.role.toUpperCase()}</div>
-          </div>
+          {m.active && <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white dark:border-slate-900 rounded-full" />}
         </div>
-        
-        <button
+        <button 
           onClick={() => onToggle(m.id, { active: !m.active })}
-          className={`w-14 h-6 rounded flex items-center px-1 transition-all border ${m.active ? 'bg-accent-green/20 border-accent-green/40' : 'bg-white/5 border-white/10'}`}
+          className={`p-2 rounded-xl transition-all ${m.active ? 'text-accent-primary hover:bg-accent-primary/5' : 'text-slate-400 hover:bg-slate-100'}`}
         >
-          <div className={`w-4 h-4 rounded-sm transition-all ${m.active ? 'translate-x-8 bg-accent-green shadow-[0_0_8px_var(--color-accent-green)]' : 'bg-text-muted'}`} />
-          <span className={`absolute ${m.active ? 'left-2' : 'right-2'} mono-label text-[7px] font-black ${m.active ? 'text-accent-green' : 'text-text-muted'}`}>
-            {m.active ? 'ON' : 'OFF'}
-          </span>
+          <span className="material-symbols-outlined">{m.active ? 'person_check' : 'person_off'}</span>
         </button>
       </div>
 
-      <div className="p-3 bg-black/20 border border-white/[0.03] rounded space-y-2">
-        {m.telegramId && (
-          <div className="flex items-center gap-3">
-            <Radio size={10} className="text-text-muted" />
-            <span className="mono-label text-[8px] text-text-muted w-12 uppercase tracking-widest">TLGRM:</span>
-            <span className="mono-label text-[10px] text-telegram font-bold uppercase tracking-tighter">@{m.telegramId}</span>
-          </div>
-        )}
-        {m.email && (
-          <div className="flex items-center gap-3">
-            <AtSign size={10} className="text-text-muted" />
-            <span className="mono-label text-[8px] text-text-muted w-12 uppercase tracking-widest">EMAIL:</span>
-            <span className="mono-label text-[10px] text-text-secondary truncate uppercase tracking-tighter">{m.email}</span>
-          </div>
-        )}
+      <div className="flex-1">
+        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1 tracking-tight">{m.name}</h3>
+        <p className="text-accent-primary font-bold text-xs uppercase tracking-widest mb-4">{m.role}</p>
+        
+        <div className="space-y-3">
+          {m.telegramId && (
+            <div className="flex items-center gap-2 text-slate-400">
+              <span className="material-symbols-outlined text-[18px]">chat</span>
+              <span className="text-xs font-semibold tracking-tight">@{m.telegramId}</span>
+            </div>
+          )}
+          {m.email && (
+            <div className="flex items-center gap-2 text-slate-400">
+              <span className="material-symbols-outlined text-[18px]">alternate_email</span>
+              <span className="text-xs font-semibold tracking-tight lowercase">{m.email}</span>
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="flex items-center justify-between pt-1">
-        <div className="flex gap-1">
-          <div className={`signal-led ${m.active ? 'signal-led-active' : ''}`} style={m.active ? { backgroundColor: m.color, boxShadow: `0 0 5px ${m.color}` } : { backgroundColor: '#333' }} />
-          <div className="signal-led signal-led-active opacity-20" />
-          <div className="signal-led signal-led-active opacity-10" />
-        </div>
-        <span className="mono-label text-[8px] text-text-muted uppercase tracking-widest">REF_ID: {m.id.slice(0, 8).toUpperCase()}</span>
+      <div className="mt-8 flex gap-3">
+        <button className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-bold uppercase tracking-widest hover:bg-slate-200 transition-colors">
+          Perfil Completo
+        </button>
+        <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-accent-primary/10 text-accent-primary hover:bg-accent-primary/20 transition-colors">
+          <span className="material-symbols-outlined text-[20px]">send</span>
+        </button>
       </div>
     </div>
   );
 }
-
-
