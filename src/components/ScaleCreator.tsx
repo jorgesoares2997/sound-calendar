@@ -75,7 +75,7 @@ export function ScaleCreator({ members, onSave, onSaveSingle, onNavigate, toast 
     }
     onSave(draftShifts, year, month);
     setJustSaved(true);
-    toast.success(`${draftShifts.length} escalas sincronizadas! ✅`);
+    toast.success(`${draftShifts.length} escalas sincronizadas!`);
   };
 
   const handleSaveSingle = (index: number) => {
@@ -86,7 +86,7 @@ export function ScaleCreator({ members, onSave, onSaveSingle, onNavigate, toast 
       return;
     }
     onSaveSingle(shift);
-    toast.success('Escala individual salva! ✅');
+    toast.success('Escala individual salva!');
     removeShift(index);
   };
 
@@ -100,80 +100,70 @@ export function ScaleCreator({ members, onSave, onSaveSingle, onNavigate, toast 
   const activeMembers = members.filter((m) => m.active);
 
   return (
-    <div className="flex flex-col gap-6 max-w-5xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-4 flex-wrap px-1">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-white to-purple-400 bg-clip-text text-transparent leading-tight">
-            🪄 Gerador de Escalas
+    <div className="flex flex-col gap-8 max-w-5xl mx-auto pb-20">
+      {/* Console Header */}
+      <div className="flex items-center justify-between gap-6 flex-wrap px-1">
+        <div className="flex flex-col">
+          <span className="mono-label text-[10px] text-accent-primary mb-1 uppercase tracking-widest">MÓDULO_DE_GERAÇÃO // v2.4</span>
+          <h1 className="text-3xl font-black text-white tracking-tighter uppercase leading-tight">
+            Sintetizador_de_Escala
           </h1>
-          <p className="text-xs text-[#5a5f75] mt-1">Crie escalas automáticas ou manuais</p>
         </div>
         
-        <div className="flex items-center gap-2 bg-[#161821] p-1 rounded-xl border border-white/5">
+        <div className="flex items-center p-1.5 bg-black/40 border border-white/5 rounded-lg shadow-inner">
           <button 
             type="button"
-            onClick={() => {
-              logger.info('ScaleCreator: Botão "Mensal" clicado.');
-              setMode('monthly');
-            }}
-            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${mode === 'monthly' ? 'bg-violet-600 text-white shadow-lg' : 'text-[#5a5f75] hover:text-[#9296ab]'}`}
+            onClick={() => setMode('monthly')}
+            className={`px-6 py-2 rounded mono-label text-[10px] font-black transition-all uppercase tracking-widest ${mode === 'monthly' ? 'bg-accent-primary text-white shadow-neon' : 'text-text-muted hover:text-white'}`}
           >
-            📅 Mensal
+            LOTE_MENSAL
           </button>
           <button 
             type="button"
-            onClick={() => {
-              logger.info('ScaleCreator: Botão "Isolada" clicado.');
-              setMode('isolated');
-            }}
-            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${mode === 'isolated' ? 'bg-violet-600 text-white shadow-lg' : 'text-[#5a5f75] hover:text-[#9296ab]'}`}
+            onClick={() => setMode('isolated')}
+            className={`px-6 py-2 rounded mono-label text-[10px] font-black transition-all uppercase tracking-widest ${mode === 'isolated' ? 'bg-accent-primary text-white shadow-neon' : 'text-text-muted hover:text-white'}`}
           >
-            ➕ Isolada
+            TX_ISOLADA
           </button>
         </div>
       </div>
 
       {mode === 'monthly' && (
-        <div className="flex items-center gap-2 px-1 mb-2">
-          <select 
-            value={month} 
-            onChange={(e) => setMonth(Number(e.target.value))}
-            className={inputCls + ' !py-1.5 text-xs w-28'}
-          >
-            {MONTH_NAMES.map((m, i) => (
-              <option key={m} value={i}>{m}</option>
-            ))}
-          </select>
+        <div className="flex items-center gap-3 px-4 py-3 bg-black/20 border border-white/5 rounded-lg">
+          <div className="flex items-center gap-2">
+            <span className="mono-label text-[9px] text-text-muted uppercase tracking-widest">SELEÇÃO_BANCO:</span>
+            <select 
+              value={month} 
+              onChange={(e) => setMonth(Number(e.target.value))}
+              className="bg-black/60 border border-white/10 rounded px-3 py-1.5 mono-label text-[10px] text-white outline-none focus:border-accent-primary uppercase"
+            >
+              {MONTH_NAMES.map((m, i) => <option key={m} value={i}>{m.toUpperCase()}</option>)}
+            </select>
+          </div>
           <select 
             value={year} 
             onChange={(e) => setYear(Number(e.target.value))}
-            className={inputCls + ' !py-1.5 text-xs w-20'}
+            className="bg-black/60 border border-white/10 rounded px-3 py-1.5 mono-label text-[10px] text-white outline-none focus:border-accent-primary"
           >
-            {[2024, 2025, 2026].map((y) => (
-              <option key={y} value={y}>{y}</option>
-            ))}
+            {[2024, 2025, 2026].map((y) => <option key={y} value={y}>{y}</option>)}
           </select>
-          <span className="text-[10px] text-[#5a5f75] ml-2 italic hidden sm:inline">
-            * Sugestões baseadas em domingos e quartas.
-          </span>
+          <div className="ml-auto flex items-center gap-2">
+            <div className="signal-led signal-led-active opacity-40" />
+            <span className="mono-label text-[8px] text-text-muted italic uppercase tracking-widest">GERAÇÃO_AUTO_ATIVA (DOM/QUA)</span>
+          </div>
         </div>
       )}
 
-      {/* Grid Area */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 px-1">
+      {/* Sequencer / Module Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {draftShifts.map((shift, idx) => (
-          <div key={`${idx}-${shift.date}-${mode}`} className="bg-[#161821] border border-white/[0.06] rounded-2xl p-3 sm:p-4 flex gap-4 hover:border-white/10 transition-all relative group overflow-hidden">
-            {/* Minimalist Date Column */}
-            <div className="flex flex-col items-center justify-center gap-0.5 border-r border-white/5 pr-4 flex-shrink-0 min-w-[75px]">
-              <span className="text-[10px] text-purple-400 font-extrabold uppercase tracking-tight">
-                {formatDayName(shift.date)}
-              </span>
+          <div key={`${idx}-${shift.date}`} className="studio-panel rounded-lg p-5 flex gap-6 hover:border-accent-primary/30 transition-all relative group overflow-hidden">
+            {/* Day Display Module */}
+            <div className="flex flex-col items-center justify-center border-r border-white/5 pr-6 min-w-[80px]">
+              <span className="mono-label text-[10px] text-accent-primary mb-1 uppercase font-black">{formatDayName(shift.date).toUpperCase()}</span>
               <input 
                 type="number"
-                min="1"
-                max="31"
-                className="bg-transparent text-xl font-black text-[#f0f1f6] outline-none text-center w-14 hover:text-white transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className="bg-black/40 border border-white/10 rounded text-xl font-black text-white outline-none text-center w-14 py-2 focus:border-accent-primary shadow-inner"
                 value={parseInt(shift.date.split('-')[2], 10) || 1}
                 onChange={(e) => {
                   const dayNum = parseInt(e.target.value, 10);
@@ -186,73 +176,51 @@ export function ScaleCreator({ members, onSave, onSaveSingle, onNavigate, toast 
               />
             </div>
 
-            {/* Row Content */}
-            <div className="flex flex-col gap-3 flex-grow min-w-0">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
+            {/* Parameter Controls */}
+            <div className="flex flex-col gap-4 flex-grow min-w-0">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
                   <select 
-                    className="bg-white/5 border border-white/5 rounded-lg px-2 py-1 text-[10px] font-bold text-[#5a5f75] uppercase outline-none"
+                    className="bg-black/60 border border-white/10 rounded px-2 py-1 mono-label text-[9px] text-accent-primary outline-none focus:border-accent-primary uppercase"
                     value={shift.type}
                     onChange={(e) => updateShift(idx, { type: e.target.value as ShiftType })}
                   >
-                    {SHIFT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label.split(' ')[1]}</option>)}
+                    {SHIFT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label.toUpperCase()}</option>)}
                   </select>
-                  <div className="flex items-center gap-1">
-                    <input 
-                      type="time"
-                      className="bg-transparent text-xs text-[#9296ab] outline-none focus:text-white w-14"
-                      value={shift.startTime}
-                      onChange={(e) => updateShift(idx, { startTime: e.target.value })}
-                    />
-                    <span className="text-[#5a5f75] text-[10px]">-</span>
-                    <input 
-                      type="time"
-                      className="bg-transparent text-xs text-[#9296ab] outline-none focus:text-white w-14"
-                      value={shift.endTime}
-                      onChange={(e) => updateShift(idx, { endTime: e.target.value })}
-                    />
+                  <div className="flex items-center gap-2 px-2 py-1 bg-black/40 border border-white/5 rounded">
+                    <input type="time" className="bg-transparent mono-label text-[10px] text-white outline-none w-14" value={shift.startTime} onChange={(e) => updateShift(idx, { startTime: e.target.value })} />
+                    <span className="text-text-muted text-[10px]">-</span>
+                    <input type="time" className="bg-transparent mono-label text-[10px] text-white outline-none w-14" value={shift.endTime} onChange={(e) => updateShift(idx, { endTime: e.target.value })} />
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <button 
-                    type="button"
-                    onClick={() => handleSaveSingle(idx)}
-                    className="w-8 h-8 rounded-lg text-green-500/40 hover:bg-green-500/10 hover:text-green-400 transition-all flex items-center justify-center"
-                    title="Salvar apenas esta escala"
-                  >
-                    💾
-                  </button>
-                  <button 
-                    type="button"
-                    onClick={() => removeShift(idx)}
-                    className="w-8 h-8 rounded-lg text-red-500/30 hover:bg-red-500/10 hover:text-red-400 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100"
-                    title="Remover"
-                  >
-                    ✕
-                  </button>
+                <div className="flex items-center gap-1.5">
+                  <button onClick={() => handleSaveSingle(idx)} className="px-1.5 h-8 rounded bg-white/5 border border-white/10 flex items-center justify-center mono-label text-[8px] font-black hover:text-accent-green transition-all uppercase">GRAVAR</button>
+                  <button onClick={() => removeShift(idx)} className="w-8 h-8 rounded bg-white/5 border border-white/10 flex items-center justify-center mono-label text-[10px] font-black hover:text-accent-red transition-all uppercase">DEL</button>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <input 
-                  className="bg-transparent text-sm font-bold text-[#f0f1f6] outline-none focus:text-purple-400 transition-colors w-full p-0 border-none"
-                  value={shift.title}
-                  placeholder="Título da escala..."
-                  onChange={(e) => updateShift(idx, { title: e.target.value })}
-                />
-                <select 
-                  className="w-full bg-[#111219] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#f0f1f6] outline-none focus:border-violet-500 appearance-none"
-                  value={shift.memberIds[0] || ''}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    updateShift(idx, { memberIds: val ? [val] : [] });
-                  }}
-                >
-                  <option value="">Selecione o técnico...</option>
-                  {activeMembers.map(m => (
-                    <option key={m.id} value={m.id}>{m.name}</option>
-                  ))}
-                </select>
+              <div className="space-y-3">
+                <div className="relative">
+                  <span className="absolute -top-2 left-2 px-1 bg-bg-card mono-label text-[7px] text-text-muted uppercase tracking-widest">RÓTULO_DO_MÓDULO</span>
+                  <input 
+                    className="w-full bg-black/40 border border-white/10 rounded px-3 py-2 text-xs font-bold text-white outline-none focus:border-accent-primary placeholder:opacity-20 uppercase"
+                    value={shift.title}
+                    placeholder="NOME_DA_ESCALA..."
+                    onChange={(e) => updateShift(idx, { title: e.target.value })}
+                  />
+                </div>
+                
+                <div className="relative">
+                  <span className="absolute -top-2 left-2 px-1 bg-bg-card mono-label text-[7px] text-text-muted uppercase tracking-widest">PATCH_DE_OPERADOR</span>
+                  <select 
+                    className="w-full bg-black/40 border border-white/10 rounded px-3 py-2 text-xs font-bold text-white outline-none focus:border-accent-primary appearance-none uppercase"
+                    value={shift.memberIds[0] || ''}
+                    onChange={(e) => updateShift(idx, { memberIds: e.target.value ? [e.target.value] : [] })}
+                  >
+                    <option value="">SELECIONAR_OPERADOR...</option>
+                    {activeMembers.map(m => <option key={m.id} value={m.id}>{m.name.toUpperCase()}</option>)}
+                  </select>
+                </div>
               </div>
             </div>
           </div>
@@ -260,45 +228,44 @@ export function ScaleCreator({ members, onSave, onSaveSingle, onNavigate, toast 
         
         <button 
           type="button"
-          onClick={() => {
-            logger.info('ScaleCreator: Botão "Adicionar Escala" clicado.');
-            addEmptyShift();
-          }}
-          className="bg-white/[0.02] border border-dashed border-white/10 rounded-2xl p-6 flex items-center justify-center gap-3 text-sm font-bold text-[#5a5f75] hover:border-white/20 hover:bg-white/[0.04] hover:text-[#9296ab] transition-all min-h-[110px]"
+          onClick={addEmptyShift}
+          className="studio-panel rounded-lg border-dashed border-white/10 flex flex-col items-center justify-center gap-3 p-8 hover:bg-white/[0.02] hover:border-accent-primary/40 transition-all group"
         >
-          <span className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-lg">+</span>
-          Adicionar Escala {mode === 'isolated' ? 'Manual' : 'Extra'}
+          <div className="w-12 h-12 rounded bg-black/40 border border-white/10 flex items-center justify-center mono-label text-[10px] font-black group-hover:scale-110 transition-transform shadow-inner text-text-muted group-hover:text-white uppercase">ADD</div>
+          <span className="mono-label text-[10px] text-text-muted group-hover:text-white uppercase tracking-widest">NOVO_MÓDULO_PATCH</span>
         </button>
       </div>
 
-      {/* Footer */}
+      {/* Master Control Bar */}
       {(mode === 'monthly' || draftShifts.length > 0) && (
-        <div className="sticky bottom-0 bg-[#0a0b0f]/80 backdrop-blur-xl border-t border-white/[0.06] p-4 -mx-4 flex flex-col sm:flex-row items-center justify-between gap-4 z-10 sm:rounded-b-2xl sm:mx-0">
-          <span className="text-xs text-[#5a5f75]">
-            Rascunho: <strong className="text-white">{draftShifts.length} escalas</strong>
-          </span>
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+        <div className="fixed bottom-0 left-0 right-0 lg:left-64 bg-black/80 backdrop-blur-2xl border-t border-white/10 p-4 flex items-center justify-between gap-6 z-40 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+          <div className="flex items-center gap-4">
+            <div className="flex flex-col">
+              <span className="mono-label text-[8px] text-text-muted uppercase tracking-widest">STATUS_DO_LOTE</span>
+              <span className="text-xs font-black text-white uppercase tracking-tighter">{draftShifts.length} MÓDULOS_EM_BUFFER</span>
+            </div>
+            <div className="vu-meter w-20">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="vu-bar w-1.5" style={{ height: `${Math.random() * 80 + 20}%`, animationDelay: `${i * 0.1}s` }} />
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
             {justSaved && (
               <button 
-                type="button"
-                onClick={() => {
-                  logger.info('ScaleCreator: Botão "Checar Automações" clicado.');
-                  onNavigate?.('automation');
-                }}
-                className="px-6 py-2.5 rounded-xl text-xs font-bold bg-white/5 border border-white/10 text-purple-400 hover:bg-white/10 transition-all flex-1 sm:flex-none animate-fade-in"
+                onClick={() => onNavigate?.('automation')}
+                className="px-6 py-2.5 rounded mono-label text-[10px] font-black bg-white/5 border border-white/10 text-accent-primary hover:bg-accent-primary/10 transition-all animate-fade-in uppercase tracking-widest"
               >
-                🤖 Checar Automações
+                IR_PARA_ROBÔ_DE_ROTEAMENTO
               </button>
             )}
-            {mode === 'monthly' && (
-              <button 
-                type="button"
-                onClick={handleSaveAll}
-                className="px-8 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-violet-600 to-purple-500 text-white shadow-xl shadow-violet-500/30 hover:brightness-110 active:scale-95 transition-all flex-1 sm:flex-none"
-              >
-                💾 Salvar Tudo (Substituir Mês)
-              </button>
-            )}
+            <button 
+              onClick={handleSaveAll}
+              className="px-10 py-3 rounded mono-label text-xs font-black bg-accent-primary text-white shadow-neon hover:brightness-110 active:scale-95 transition-all uppercase tracking-[0.2em]"
+            >
+              COMMIT_TODOS_BUFFERS
+            </button>
           </div>
         </div>
       )}
@@ -306,7 +273,7 @@ export function ScaleCreator({ members, onSave, onSaveSingle, onNavigate, toast 
   );
 }
 
-const inputCls = 'px-3.5 py-2.5 bg-[#161821] border border-white/10 rounded-xl text-sm text-[#f0f1f6] outline-none focus:border-violet-500 transition-all';
+
 const MONTH_NAMES = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import type { Member } from '@/types';
+import { Users, Radio, Database, Mail, UserCheck, UserMinus, AtSign } from 'lucide-react';
 
 interface MembersProps {
   members: Member[];
@@ -13,146 +13,132 @@ export function Members({ members, onUpdate }: MembersProps) {
   const inactive = members.filter((m) => !m.active);
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-white to-purple-400 bg-clip-text text-transparent leading-tight">
-            👥 Equipe de Técnicos
-          </h1>
-          <p className="text-sm text-[#5a5f75] mt-1 pr-4">
-            Base de dados gerida via <code className="bg-white/5 px-1.5 py-0.5 rounded text-violet-300">members.json</code>
-          </p>
+    <div className="flex flex-col gap-10 max-w-5xl mx-auto pb-20">
+      {/* Module Header */}
+      <div className="flex flex-col">
+        <div className="flex items-center gap-2 mb-1">
+          <Users size={12} className="text-accent-primary" />
+          <span className="mono-label text-[10px] text-accent-primary uppercase tracking-widest">BANCO_DADOS_OPERADORES // v4.1</span>
         </div>
+        <h1 className="text-3xl font-black text-white tracking-tighter uppercase leading-tight">
+          Diretório_de_Equipe
+        </h1>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {/* Rack Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { num: members.length, label: 'Total', color: 'text-[#f0f1f6]' },
-          { num: active.length, label: 'Ativos', color: 'text-[#22c55e]' },
-          { num: inactive.length, label: 'Inativos', color: 'text-[#5a5f75]' },
-          { num: members.filter((m) => m.telegramId).length, label: 'Com Telegram', color: 'text-[#229ED9]' },
+          { num: members.length, label: 'TOTAL_UNIDADES', color: 'text-white', icon: Database },
+          { num: active.length, label: 'LINK_ATIVO', color: 'text-accent-green', icon: UserCheck },
+          { num: inactive.length, label: 'MODO_BYPASS', color: 'text-text-muted', icon: UserMinus },
+          { num: members.filter((m) => m.telegramId).length, label: 'REMOTO_PRONTO', color: 'text-telegram', icon: Radio },
         ].map((s) => (
-          <div key={s.label} className="bg-[#161821] border border-white/[0.06] rounded-2xl p-4 hover:border-white/10 transition-colors">
-            <div className={`text-3xl font-black font-mono ${s.color}`}>{s.num}</div>
-            <div className="text-xs font-bold text-[#5a5f75] uppercase tracking-widest mt-1">{s.label}</div>
+          <div key={s.label} className="studio-panel rounded-lg p-5 group hover:border-accent-primary/40 transition-all">
+            <div className="flex items-center justify-between mb-2">
+              <div className={`text-4xl font-black mono-label ${s.color}`}>{String(s.num).padStart(2, '0')}</div>
+              <s.icon size={20} className={s.color} />
+            </div>
+            <div className="mono-label text-[9px] text-text-muted mt-2 tracking-[0.2em] uppercase">{s.label}</div>
           </div>
         ))}
       </div>
 
-      {/* Empty */}
-      {members.length === 0 && (
-        <div className="flex flex-col items-center gap-4 text-center py-16 bg-[#161821] border border-dashed border-white/10 rounded-3xl">
-          <div className="text-6xl animate-float">👤</div>
-          <h3 className="text-xl font-bold text-[#f0f1f6]">Nenhum membro ainda</h3>
-          <p className="text-sm text-[#9296ab] max-w-sm">
-            Adicione os membros para poder escalar e enviar lembretes.
-          </p>
-          <button disabled
-            className="px-5 py-2.5 rounded-xl text-sm font-bold bg-white/5 text-[#5a5f75] border border-white/10 cursor-not-allowed">
-            Gestão Manual (JSON)
-          </button>
-        </div>
-      )}
-
-      {/* Active members */}
-      {active.length > 0 && (
-        <div className="flex flex-col gap-4">
-          <SectionTitle dot="active" label="Membros Ativos" count={active.length} />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {active.map((m) => (
-              <MemberCard key={m.id} member={m} onToggle={onUpdate} />
-            ))}
+      {/* Database Display */}
+      <div className="flex flex-col gap-8">
+        {active.length > 0 && (
+          <div className="flex flex-col gap-6">
+            <div className="flex items-center gap-3">
+              <div className="signal-led signal-led-active" />
+              <span className="mono-label text-[10px] text-white font-black uppercase tracking-widest">Operadores_Ativos</span>
+              <div className="h-[1px] flex-1 bg-white/5" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {active.map((m) => (
+                <MemberCard key={m.id} member={m} onToggle={onUpdate} />
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Inactive members */}
-      {inactive.length > 0 && (
-        <div className="flex flex-col gap-4">
-          <SectionTitle dot="inactive" label="Inativos" count={inactive.length} />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 opacity-60">
-            {inactive.map((m) => (
-              <MemberCard key={m.id} member={m} onToggle={onUpdate} />
-            ))}
+        {inactive.length > 0 && (
+          <div className="flex flex-col gap-6">
+            <div className="flex items-center gap-3 opacity-40">
+              <div className="signal-led" style={{ backgroundColor: '#333' }} />
+              <span className="mono-label text-[10px] text-text-muted font-black uppercase tracking-widest">Operadores_em_Standby</span>
+              <div className="h-[1px] flex-1 bg-white/5" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 opacity-50 grayscale hover:grayscale-0 transition-all">
+              {inactive.map((m) => (
+                <MemberCard key={m.id} member={m} onToggle={onUpdate} />
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
 
-// ─── MemberCard ──────────────────────────────────────────
 function MemberCard({ member: m, onToggle }: {
   member: Member;
   onToggle: (id: string, changes: Partial<Member>) => void;
 }) {
   const initials = m.name.split(' ').map((n) => n[0]).slice(0, 2).join('');
   return (
-    <div className="bg-[#161821] border border-white/[0.06] rounded-2xl p-5 flex flex-col gap-4 hover:-translate-y-0.5 hover:border-white/10 hover:shadow-xl transition-all relative overflow-hidden">
-      {/* Color bar top */}
-      <div className="absolute top-0 left-0 right-0 h-[3px] opacity-70" style={{ background: m.color }} />
+    <div className="studio-card rounded-lg p-5 flex flex-col gap-5 relative overflow-hidden group">
+      {/* Module Strip */}
+      <div className="absolute top-0 left-0 bottom-0 w-1" style={{ backgroundColor: m.color, boxShadow: `0 0 5px ${m.color}` }} />
 
       <div className="flex items-start justify-between">
-        {/* Avatar */}
-        <div className="relative">
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center text-base font-extrabold border-2"
-            style={{ background: `${m.color}22`, borderColor: `${m.color}55`, color: m.color }}>
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded bg-black/40 border border-white/10 flex items-center justify-center text-base font-black shadow-inner uppercase"
+            style={{ color: m.color }}>
             {initials}
           </div>
-          <span className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-[#161821] ${m.active ? 'bg-[#22c55e]' : 'bg-[#5a5f75]'}`}
-            style={m.active ? { boxShadow: '0 0 6px rgba(34,197,94,0.6)' } : {}} />
+          <div>
+            <div className="text-sm font-black text-white uppercase tracking-tight">{m.name}</div>
+            <div className="mono-label text-[9px] text-text-muted uppercase tracking-widest">{m.role.toUpperCase()}</div>
+          </div>
         </div>
+        
+        <button
+          onClick={() => onToggle(m.id, { active: !m.active })}
+          className={`w-14 h-6 rounded flex items-center px-1 transition-all border ${m.active ? 'bg-accent-green/20 border-accent-green/40' : 'bg-white/5 border-white/10'}`}
+        >
+          <div className={`w-4 h-4 rounded-sm transition-all ${m.active ? 'translate-x-8 bg-accent-green shadow-[0_0_8px_var(--color-accent-green)]' : 'bg-text-muted'}`} />
+          <span className={`absolute ${m.active ? 'left-2' : 'right-2'} mono-label text-[7px] font-black ${m.active ? 'text-accent-green' : 'text-text-muted'}`}>
+            {m.active ? 'ON' : 'OFF'}
+          </span>
+        </button>
       </div>
 
-      <div>
-        <div className="text-base font-bold text-[#f0f1f6]">{m.name}</div>
-        <div className="text-xs text-[#5a5f75] font-semibold uppercase tracking-wider mt-0.5">{m.role}</div>
-      </div>
-
-      <div className="flex flex-col gap-2 bg-[#111219]/50 rounded-xl p-3 border border-white/[0.03]">
+      <div className="p-3 bg-black/20 border border-white/[0.03] rounded space-y-2">
         {m.telegramId && (
-          <div className="flex items-center gap-2 text-[11px] text-[#229ED9] font-mono">
-            <span className="opacity-70">✈️</span> {m.telegramId}
+          <div className="flex items-center gap-3">
+            <Radio size={10} className="text-text-muted" />
+            <span className="mono-label text-[8px] text-text-muted w-12 uppercase tracking-widest">TLGRM:</span>
+            <span className="mono-label text-[10px] text-telegram font-bold uppercase tracking-tighter">@{m.telegramId}</span>
           </div>
         )}
         {m.email && (
-          <div className="flex items-center gap-2 text-[11px] text-[#9296ab] font-mono">
-            <span className="opacity-70">📧</span> {m.email}
-          </div>
-        )}
-        {m.phone && (
-          <div className="flex items-center gap-2 text-[11px] text-[#9296ab] font-mono">
-            <span className="opacity-70">📞</span> {m.phone}
+          <div className="flex items-center gap-3">
+            <AtSign size={10} className="text-text-muted" />
+            <span className="mono-label text-[8px] text-text-muted w-12 uppercase tracking-widest">EMAIL:</span>
+            <span className="mono-label text-[10px] text-text-secondary truncate uppercase tracking-tighter">{m.email}</span>
           </div>
         )}
       </div>
 
-      <div className="pt-1 flex items-center gap-2.5">
-        <button
-          role="switch"
-          aria-checked={m.active}
-          onClick={() => onToggle(m.id, { active: !m.active })}
-          className={`relative w-9 h-5 rounded-full border transition-all ${m.active ? 'bg-green-500/20 border-green-500/50' : 'bg-white/[0.04] border-white/[0.08]'}`}
-        >
-          <span className={`absolute top-0.5 w-4 h-4 rounded-full transition-all ${m.active ? 'left-[18px] bg-[#22c55e] shadow-[0_0_6px_rgba(34,197,94,0.6)]' : 'left-0.5 bg-[#5a5f75]'}`} />
-        </button>
-        <span className={`text-xs font-semibold ${m.active ? 'text-[#22c55e]' : 'text-[#5a5f75]'}`}>
-          {m.active ? 'Ativo' : 'Inativo'}
-        </span>
+      <div className="flex items-center justify-between pt-1">
+        <div className="flex gap-1">
+          <div className={`signal-led ${m.active ? 'signal-led-active' : ''}`} style={m.active ? { backgroundColor: m.color, boxShadow: `0 0 5px ${m.color}` } : { backgroundColor: '#333' }} />
+          <div className="signal-led signal-led-active opacity-20" />
+          <div className="signal-led signal-led-active opacity-10" />
+        </div>
+        <span className="mono-label text-[8px] text-text-muted uppercase tracking-widest">REF_ID: {m.id.slice(0, 8).toUpperCase()}</span>
       </div>
     </div>
   );
 }
 
-// ─── Helpers ─────────────────────────────────────────────
-function SectionTitle({ dot, label, count }: { dot: 'active' | 'inactive'; label: string; count: number }) {
-  return (
-    <div className="flex items-center gap-2 text-xs font-bold text-[#9296ab] uppercase tracking-widest">
-      <span className={`w-2 h-2 rounded-full ${dot === 'active' ? 'bg-[#22c55e] shadow-[0_0_6px_rgba(34,197,94,0.6)]' : 'bg-[#5a5f75]'}`} />
-      {label}
-      <span className="ml-1 px-2 py-0.5 rounded-full bg-white/[0.04] border border-white/[0.06] text-[10px]">{count}</span>
-    </div>
-  );
-}
+

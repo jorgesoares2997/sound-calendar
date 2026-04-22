@@ -1,15 +1,67 @@
 [
   {
-    "date": "2026-04-16",
+    "date": "2026-04-25",
     "title": "Nova Escala",
-    "type": "culto",
+    "type": "manha",
+    "startTime": "19:30",
+    "endTime": "21:30",
+    "memberIds": [
+      "5"
+    ],
+    "notes": "",
+    "id": "8de9c9d3-f38e-4229-b1b1-0272dff2286c",
+    "createdAt": "2026-04-21T15:23:17.926Z"
+  },
+  {
+    "date": "2026-04-23",
+    "title": "Nova Escala",
+    "type": "evento",
     "startTime": "19:30",
     "endTime": "21:30",
     "memberIds": [
       "1"
     ],
     "notes": "",
-    "id": "bfd3fe8e-3a53-4819-bf86-13ab0702ae40",
-    "createdAt": "2026-04-16T18:34:49.484Z"
+    "id": "7516e780-e7de-4de3-8b13-fc62a3281c7f",
+    "createdAt": "2026-04-21T15:23:20.842Z"
+  },
+  {
+    "date": "2026-04-26",
+    "title": "Culto de Domingo (Noite)",
+    "type": "culto",
+    "startTime": "18:30",
+    "endTime": "20:30",
+    "memberIds": [
+      "1"
+    ],
+    "notes": "",
+    "id": "2e4c8890-8ddb-40b9-baa1-8021daf95bc8",
+    "createdAt": "2026-04-21T15:23:23.108Z"
+  },
+  {
+    "date": "2026-04-26",
+    "title": "Culto de Domingo (Manhã)",
+    "type": "culto",
+    "startTime": "09:30",
+    "endTime": "11:30",
+    "memberIds": [
+      "1"
+    ],
+    "notes": "",
+    "id": "c9e08dd7-f991-4cff-9607-138fd8b6e600",
+    "createdAt": "2026-04-21T15:23:24.575Z"
+  },
+  {
+    "date": "2026-04-22",
+    "title": "Culto de Quarta",
+    "type": "culto",
+    "startTime": "19:30",
+    "endTime": "21:30",
+    "memberIds": [
+      "3"
+    ],
+    "notes": "",
+    "id": "8633eae1-b2eb-4ef7-9f79-65c21b1121cf",
+    "createdAt": "2026-04-21T15:23:27.625Z"
   }
 ]

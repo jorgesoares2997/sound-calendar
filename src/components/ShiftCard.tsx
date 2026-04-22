@@ -2,6 +2,7 @@
 
 import type { Shift, Member, ShiftType } from '@/types';
 import { SHIFT_TYPES } from './Calendar';
+import { Trash2, Settings2, SendHorizontal } from 'lucide-react';
 
 interface ShiftCardProps {
   shift: Shift;
@@ -23,68 +24,91 @@ export function ShiftCard({ shift, members, onDelete, onEdit, onSendReminder, is
     .filter(Boolean) as Member[];
 
   return (
-    <div className="bg-[#111219] border border-white/[0.06] rounded-xl p-4 border-l-4 hover:border-white/10 transition-all"
-      style={{ borderLeftColor: meta.color }}>
-      <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
-        <div className="flex items-center gap-2 flex-wrap text-left">
-          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: meta.color }} />
-          <div className="flex flex-col">
-            <span className="text-sm font-bold text-[#f0f1f6]">{shift.title}</span>
-            <span className="text-[10px] text-[#5a5f75]">{shift.date}</span>
-          </div>
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border"
-            style={{ color: meta.color, background: `${meta.color}20`, borderColor: `${meta.color}40` }}>
-            {meta.label}
-          </span>
+    <div className="studio-card rounded border-t-2 overflow-hidden" style={{ borderTopColor: meta.color }}>
+      {/* Top Console Strip */}
+      <div className="px-4 py-2 bg-black/40 border-b border-white/[0.03] flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="signal-led signal-led-active" style={{ backgroundColor: meta.color, boxShadow: `0 0 5px ${meta.color}` }} />
+          <span className="mono-label text-[9px] text-text-muted uppercase tracking-widest">{meta.label}</span>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {onSendReminder && (
-            <button 
-              onClick={onSendReminder} 
-              disabled={isSending}
-              className="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-[#229ED9] text-white hover:brightness-110 disabled:opacity-50 transition-all flex items-center gap-1"
-            >
-              {isSending ? '⏳' : '📨'} {isSending ? 'Enviando...' : 'Lembrar'}
-            </button>
-          )}
+        <div className="flex items-center gap-1.5">
           {onEdit && (
-            <button 
-              onClick={onEdit}
-              className="w-8 h-8 rounded-lg bg-violet-500/10 border border-violet-500/20 text-purple-400 hover:bg-violet-500/20 transition-all flex items-center justify-center text-sm"
-              title="Editar"
-            >
-              ✏️
+            <button onClick={onEdit} className="px-2 h-6 rounded bg-white/5 border border-white/10 flex items-center justify-center text-text-secondary hover:text-white transition-all gap-1.5">
+              <Settings2 size={10} />
+              <span className="mono-label text-[8px] font-black uppercase">AJUSTE</span>
             </button>
           )}
-          <button 
-            onClick={onDelete}
-            className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-all flex items-center justify-center text-sm"
-            title="Excluir"
-          >
-            🗑️
+          <button onClick={onDelete} className="w-6 h-6 rounded bg-white/5 border border-white/10 flex items-center justify-center text-text-muted hover:text-accent-red transition-all">
+            <Trash2 size={12} />
           </button>
         </div>
       </div>
 
-      {shift.startTime && (
-        <div className="text-xs text-[#5a5f75] font-mono mb-2">
-          🕐 {shift.startTime}{shift.endTime ? ` — ${shift.endTime}` : ''}
+      {/* Main Content Module */}
+      <div className="p-4 flex flex-col gap-3">
+        <div>
+          <div className="mono-label text-[8px] text-text-muted mb-1 uppercase tracking-widest">TÍTULO_MÓDULO</div>
+          <h4 className="text-sm font-black text-white uppercase tracking-tight truncate">{shift.title}</h4>
         </div>
-      )}
-      {shift.notes && <p className="text-xs text-[#9296ab] italic mb-3">{shift.notes}</p>}
 
-      <div className="flex flex-wrap gap-2 mt-2">
-        {assigned.length === 0
-          ? <span className="text-xs text-[#5a5f75] italic">Nenhum membro atribuído</span>
-          : assigned.map((m) => (
-            <span key={m.id} className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border"
-              style={{ color: m.color, borderColor: `${m.color}55`, background: `${m.color}12` }}>
-              <span className="w-1.5 h-1.5 rounded-full" style={{ background: m.color }} />
-              {m.name}
-            </span>
-          ))
-        }
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            <div className="mono-label text-[8px] text-text-muted mb-1 uppercase tracking-widest">SYNC_HORÁRIO</div>
+            <div className="text-xs font-black text-white mono-label">
+              {shift.startTime || '--:--'} <span className="opacity-20 mx-1">&gt;&gt;</span> {shift.endTime || '--:--'}
+            </div>
+          </div>
+          {onSendReminder && (
+            <button 
+              onClick={onSendReminder} 
+              disabled={isSending}
+              className={`
+                px-3 py-1.5 rounded mono-label text-[9px] font-black transition-all uppercase tracking-widest flex items-center gap-2
+                ${isSending ? 'bg-white/10 text-text-muted' : 'bg-telegram text-white shadow-lg hover:brightness-110 active:scale-95'}
+              `}
+            >
+              {isSending ? 'TX_...' : (
+                <>
+                  <SendHorizontal size={10} />
+                  ENVIAR_TX
+                </>
+              )}
+            </button>
+          )}
+        </div>
+
+        {shift.notes && (
+          <div className="p-2 bg-black/20 border border-white/5 rounded">
+            <span className="mono-label text-[7px] text-text-muted block mb-1 uppercase tracking-widest">NOTAS_MÓDULO</span>
+            <p className="text-[10px] text-text-secondary leading-tight italic">{shift.notes}</p>
+          </div>
+        )}
+
+        <div className="pt-2 border-t border-white/[0.03]">
+          <div className="mono-label text-[8px] text-text-muted mb-2 uppercase tracking-widest">OPERADORES_ATRIBUÍDOS</div>
+          <div className="flex flex-wrap gap-1.5">
+            {assigned.length === 0 ? (
+              <span className="mono-label text-[8px] text-accent-red/60 uppercase font-black">Nenhum_Operador_Vinculado</span>
+            ) : (
+              assigned.map((m) => (
+                <div key={m.id} className="flex items-center gap-2 px-2 py-1 rounded bg-black/40 border border-white/5">
+                  <div className="w-1 h-1 rounded-full" style={{ backgroundColor: m.color, boxShadow: `0 0 3px ${m.color}` }} />
+                  <span className="text-[10px] font-bold text-white uppercase tracking-tighter">{m.name.split(' ')[0]}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Decorative Bottom Meter */}
+      <div className="h-1 w-full bg-black/60 flex gap-[1px] px-1">
+        {[...Array(20)].map((_, i) => (
+          <div key={i} className="h-full flex-1 bg-white/[0.02]" />
+        ))}
       </div>
     </div>
   );
 }
+
+

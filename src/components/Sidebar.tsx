@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Calendar, Zap, Bot, Users, Sliders } from 'lucide-react';
 
 const NAV_ITEMS = [
-  { id: 'calendar', label: 'Calendário', icon: '📅', href: '/' },
-  { id: 'scale-creator', label: 'Gerar Escalas', icon: '🪄', href: '/gerar-escalas' },
-  { id: 'automation', label: 'Automações', icon: '🤖', href: '/automacao' },
-  { id: 'members', label: 'Membros', icon: '👥', href: '/equipe' },
-  { id: 'settings', label: 'Configurações', icon: '⚙️', href: '/configuracoes' },
+  { id: 'calendar', label: 'Calendário', href: '/', code: '[CAL]', icon: Calendar },
+  { id: 'scale-creator', label: 'Gerador', href: '/gerar-escalas', code: '[GEN]', icon: Zap },
+  { id: 'automation', label: 'Automação', href: '/automacao', code: '[ROUT]', icon: Bot },
+  { id: 'members', label: 'Equipe', href: '/equipe', code: '[OPS]', icon: Users },
+  { id: 'settings', label: 'Ajustes', href: '/configuracoes', code: '[SYS]', icon: Sliders },
 ];
 
 interface SidebarProps {
@@ -25,7 +26,7 @@ export function Sidebar({ teamName, isOpen, onClose }: SidebarProps) {
       {/* Mobile overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden animate-fade-in"
+          className="fixed inset-0 bg-black/80 backdrop-blur-md z-40 lg:hidden animate-fade-in"
           onClick={onClose}
         />
       )}
@@ -33,59 +34,99 @@ export function Sidebar({ teamName, isOpen, onClose }: SidebarProps) {
       {/* Sidebar panel */}
       <aside
         className={`
-          fixed top-0 left-0 bottom-0 z-50 w-60 flex flex-col
-          bg-[#111219] border-r border-white/[0.06] transition-transform duration-300 ease-in-out
+          fixed top-0 left-0 bottom-0 z-50 w-64 flex flex-col
+          bg-bg-surface border-r border-white/5 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]
           lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+          shadow-[10px_0_30px_rgba(0,0,0,0.5)]
         `}
       >
-        {/* Brand */}
-        <div className="flex items-center gap-3 px-4 pt-5 pb-5 border-b border-white/[0.06]">
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-600 to-purple-500 flex items-center justify-center text-xl shadow-lg animate-pulse-glow flex-shrink-0">
-            🎛️
+        {/* Rack Ears (Decorative) */}
+        <div className="absolute top-0 right-0 bottom-0 w-1 bg-gradient-to-r from-transparent to-white/5" />
+        
+        {/* Brand/Console Header */}
+        <div className="px-6 py-8 flex flex-col gap-4 border-b border-white/[0.03]">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <div className="w-10 h-10 rounded bg-bg-surface border border-white/10 flex items-center justify-center text-[10px] font-black text-accent-primary shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]">
+                SC
+              </div>
+              <div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-accent-primary shadow-[0_0_8px_var(--color-accent-primary)] animate-pulse" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs font-black tracking-[0.2em] text-white uppercase">
+                SC-CONSO
+              </span>
+              <span className="mono-label text-accent-primary uppercase">v2.0 MESTRE</span>
+            </div>
           </div>
-          <div className="flex flex-col min-w-0">
-            <span className="text-sm font-extrabold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent leading-tight">
-              Sound Calendar
-            </span>
-            <span className="text-xs text-[#5a5f75] font-medium truncate">{teamName || 'Sound Team'}</span>
+          
+          <div className="p-3 bg-black/40 border border-white/[0.05] rounded-lg">
+            <div className="mono-label text-[10px] mb-1 text-text-muted uppercase">EQUIPE ATIVA</div>
+            <div className="text-sm font-bold text-white truncate uppercase tracking-tighter">{teamName || 'SEM_SINAL'}</div>
           </div>
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 flex flex-col gap-1 px-3 pt-4">
+        {/* Console Navigation */}
+        <nav className="flex-1 px-4 py-6 flex flex-col gap-2">
+          <div className="mono-label text-[10px] px-3 mb-2 text-text-muted uppercase">ROTEAMENTO / MÓDULOS</div>
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href;
+            const Icon = item.icon;
             return (
               <Link
                 key={item.id}
                 href={item.href}
                 onClick={onClose}
                 className={`
-                  flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium
-                  transition-all duration-200 w-full text-left relative
+                  group relative flex items-center gap-3 px-4 py-3 rounded border transition-all duration-300
                   ${isActive
-                    ? 'bg-violet-600/15 text-purple-400'
-                    : 'text-[#9296ab] hover:bg-white/[0.04] hover:text-[#f0f1f6]'}
+                    ? 'bg-white/[0.03] border-white/10 text-white shadow-lg'
+                    : 'border-transparent text-text-secondary hover:text-white hover:bg-white/[0.01]'}
                 `}
               >
-                <span className="text-lg w-6 text-center flex-shrink-0">{item.icon}</span>
-                <span className="flex-1">{item.label}</span>
+                {/* Active Indicator LED */}
+                <div className={`w-1.5 h-4 rounded-full transition-all duration-500 ${isActive ? 'bg-accent-primary shadow-[0_0_10px_var(--color-accent-primary)]' : 'bg-white/5'}`} />
+                
+                <div className="flex items-center gap-2">
+                  <Icon size={14} className={isActive ? 'text-accent-primary' : 'text-text-muted group-hover:text-white'} />
+                  <span className="mono-label text-[9px] font-black w-8 text-center transition-transform group-hover:scale-110">{item.code}</span>
+                </div>
+                
+                <span className="text-[11px] font-bold uppercase tracking-wider flex-1">{item.label}</span>
+                
                 {isActive && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.8)]" />
+                  <div className="vu-meter">
+                    <div className="vu-bar" style={{ animationDelay: '0s' }} />
+                    <div className="vu-bar" style={{ animationDelay: '0.2s' }} />
+                    <div className="vu-bar" style={{ animationDelay: '0.4s' }} />
+                  </div>
                 )}
               </Link>
             );
           })}
         </nav>
 
-        {/* Footer */}
-        <div className="px-3 pb-5 pt-3 border-t border-white/[0.06] mt-auto">
-          <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-[#229ED9]/10 border border-[#229ED9]/20">
-            <span className="text-base">✈️</span>
-            <span className="text-xs font-semibold text-[#229ED9]">Telegram Bot</span>
+        {/* Footer / System Status */}
+        <div className="p-6 border-t border-white/[0.03] bg-black/20">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <span className="mono-label text-[9px] text-text-muted uppercase">STATUS DO SISTEMA</span>
+              <div className="flex gap-1">
+                <div className="signal-led signal-led-active" />
+                <div className="signal-led signal-led-active" style={{ opacity: 0.5 }} />
+                <div className="signal-led" style={{ backgroundColor: '#333' }} />
+              </div>
+            </div>
+            
+            <div className="px-3 py-2 bg-telegram/10 border border-telegram/20 rounded flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-telegram animate-pulse shadow-[0_0_5px_var(--color-telegram)]" />
+              <span className="mono-label text-[9px] text-telegram font-black uppercase">TLGRM_PRONTO</span>
+            </div>
           </div>
         </div>
       </aside>
     </>
   );
 }
+
+

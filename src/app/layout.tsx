@@ -10,11 +10,36 @@ const inter = Inter({
   display: 'swap',
 });
 
-export const metadata: Metadata = {
-  title: 'Sound Calendar · Escalas da Equipe',
-  description: 'Gerencie escalas da equipe de som e envie lembretes via Telegram.',
-  keywords: ['sound', 'calendar', 'escala', 'telegram', 'equipe'],
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: '#8b5cf6',
 };
+
+export const metadata: Metadata = {
+  title: 'Sound Calendar // Sincronização de Frequências de Equipe',
+  description: 'Sistema de precisão para gerenciamento de escalas técnicas e roteamento de sinais de notificação via Telegram. Estúdio de controle de pessoal Sound Team.',
+  keywords: ['sound engineering', 'escala de som', 'calendário técnico', 'automação telegram', 'equipe de som', 'broadcast scheduling'],
+  authors: [{ name: 'Sound Team Engineering' }],
+  icons: {
+    icon: [
+      { url: '/favicon.png' },
+      { url: '/favicon.png', sizes: '32x32', type: 'image/png' },
+    ],
+    shortcut: '/favicon.png',
+    apple: '/favicon.png',
+  },
+  openGraph: {
+    title: 'Sound Calendar // Studio Control Room',
+    description: 'Gestão técnica de escalas com roteamento de sinal em tempo real.',
+    type: 'website',
+    locale: 'pt_BR',
+    siteName: 'Sound Calendar',
+  }
+};
+
+import { ThemeProvider } from '@/components/ThemeProvider';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -27,13 +52,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body className="bg-[#0a0b0f] text-[#f0f1f6] antialiased min-h-screen">
-        <StoreProvider>
-          <MainLayout>
-            {children}
-          </MainLayout>
-        </StoreProvider>
+      <body className="bg-bg-base text-text-primary antialiased min-h-screen">
+        <ThemeProvider>
+          <StoreProvider>
+            <MainLayout>
+              {children}
+            </MainLayout>
+          </StoreProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
 }
+

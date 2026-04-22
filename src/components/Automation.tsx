@@ -12,6 +12,16 @@ import { useAppStore } from '@/components/Providers';
 import { ShiftCard } from './ShiftCard';
 import { AddShiftModal } from './AddShiftModal';
 import type { Shift } from '@/types';
+import { 
+  Calendar, 
+  Clock, 
+  Zap, 
+  Search, 
+  Bot, 
+  Trash2,
+  Terminal,
+  Activity
+} from 'lucide-react';
 
 interface AutomationProps {
   toast: { success: (m: string) => void; error: (m: string) => void };
@@ -29,7 +39,7 @@ export function Automation({ toast }: AutomationProps) {
     const res = await action();
     setLoading(null);
     if (res.success) {
-      toast.success(`Notificação enviada! ✈️ (${res.emailsSent} e-mails)`);
+      toast.success(`Notificação enviada! (${res.emailsSent} e-mails)`);
     } else {
       toast.error(`Erro ao enviar: ${res.error}`);
     }
@@ -49,29 +59,34 @@ export function Automation({ toast }: AutomationProps) {
   const sortedShifts = [...shifts].sort((a, b) => a.date.localeCompare(b.date));
 
   return (
-    <div className="flex flex-col gap-6 sm:gap-8 w-full max-w-4xl mx-auto pb-10">
-      {/* Header */}
-      <div className="px-1 flex items-center justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-white to-purple-400 bg-clip-text text-transparent leading-tight">
-            🤖 Automações de Notificação
+    <div className="flex flex-col gap-10 w-full max-w-5xl mx-auto pb-20">
+      {/* Module Header */}
+      <div className="px-1 flex items-center justify-between gap-6 flex-wrap">
+        <div className="flex flex-col">
+          <div className="flex items-center gap-2 mb-1">
+            <Bot size={10} className="text-accent-primary animate-pulse" />
+            <span className="mono-label text-[10px] text-accent-primary uppercase tracking-widest">ROBÔ_DE_ROTEAMENTO_SINAL // v3.0</span>
+          </div>
+          <h1 className="text-3xl font-black text-white tracking-tighter uppercase leading-tight">
+            Núcleo_de_Automação
           </h1>
-          <p className="text-sm text-[#5a5f75] mt-1 pr-4">Resumos via Telegram e E-mail para toda a equipe</p>
         </div>
         <button 
           onClick={clearAllShifts}
-          className="px-4 py-2 rounded-xl text-xs font-bold bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-all flex items-center gap-2"
+          className="px-6 py-2 rounded mono-label text-[10px] font-black bg-accent-red/5 border border-accent-red/20 text-accent-red hover:bg-accent-red/10 transition-all flex items-center gap-2 uppercase tracking-widest"
         >
-          🗑️ Limpar Todas as Escalas
+          <Trash2 size={12} />
+          LIMPEZA_FORÇADA_DE_BUFFERS
         </button>
       </div>
 
-      {/* Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      {/* Main Control Rack */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <AutomationCard 
           title="Resumo Mensal" 
-          desc="Envia todas as escalas do mês por Telegram e E-mail."
-          icon="🗓️"
+          desc="Roteia todos os módulos de sequência mensal para Telegram/Email."
+          code="[MES]"
+          icon={Calendar}
           type="monthly"
           loading={loading === 'monthly'}
           isPreviewLoading={loading === 'preview-monthly'}
@@ -79,9 +94,10 @@ export function Automation({ toast }: AutomationProps) {
           onPreview={() => handlePreview('monthly')}
         />
         <AutomationCard 
-          title="Resumo Semanal" 
-          desc="Escalas de segunda a domingo para os escalados."
-          icon="📅"
+          title="Sequência Semanal" 
+          desc="Filtra a janela Seg-Dom e aciona a transmissão."
+          code="[SEM]"
+          icon={Clock}
           type="weekly"
           loading={loading === 'weekly'}
           isPreviewLoading={loading === 'preview-weekly'}
@@ -89,9 +105,10 @@ export function Automation({ toast }: AutomationProps) {
           onPreview={() => handlePreview('weekly')}
         />
         <AutomationCard 
-          title="Escala de Hoje" 
-          desc="Lembrete individual direto para o e-mail e grupo."
-          icon="🔔"
+          title="Sinal Diário" 
+          desc="Módulo de lembrete individual instantâneo para as tarefas de hoje."
+          code="[DIA]"
+          icon={Zap}
           type="daily"
           loading={loading === 'daily'}
           isPreviewLoading={loading === 'preview-daily'}
@@ -100,51 +117,70 @@ export function Automation({ toast }: AutomationProps) {
         />
       </div>
 
-      {/* List of Shifts for quick edit/delete */}
-      <div className="mt-4 px-1">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-bold text-white flex items-center gap-2">
-            📋 Gerenciar Escalas Existentes
-          </h3>
-          <span className="text-[10px] text-[#5a5f75] font-mono">{shifts.length} escalas no total</span>
+      {/* Module Monitor */}
+      <div className="studio-panel rounded-lg flex flex-col">
+        <div className="px-6 py-4 border-b border-white/[0.03] bg-black/20 flex items-center justify-between">
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <Activity size={10} className="text-text-muted animate-pulse" />
+              <span className="mono-label text-[9px] text-text-muted uppercase tracking-widest">MONITOR_DE_MÓDULO_ATIVO</span>
+            </div>
+            <span className="text-xs font-black text-white uppercase tracking-wider">Sequências Carregadas</span>
+          </div>
+          <div className="flex items-center gap-4">
+             <div className="vu-meter h-3 w-12">
+               {[...Array(4)].map((_, i) => <div key={i} className="vu-bar" style={{ animationDelay: `${i*0.2}s`, height: `${40 + i*15}%` }} />)}
+             </div>
+             <span className="mono-label text-[10px] text-accent-primary uppercase font-black">{shifts.length}_UNIDADES</span>
+          </div>
         </div>
 
-        {shifts.length === 0 ? (
-          <div className="bg-[#161821] border border-dashed border-white/10 rounded-2xl p-10 text-center">
-            <p className="text-sm text-[#5a5f75]">Nenhuma escala encontrada. Gere-as no menu lateral.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {sortedShifts.map(shift => (
-              <ShiftCard 
-                key={shift.id}
-                shift={shift}
-                members={members}
-                onDelete={() => deleteShift(shift.id)}
-                onEdit={() => setEditingShift(shift)}
-              />
-            ))}
-          </div>
-        )}
+        <div className="p-6">
+          {shifts.length === 0 ? (
+            <div className="py-20 border border-dashed border-white/5 rounded flex flex-col items-center justify-center opacity-40">
+              <span className="mono-label text-[10px] uppercase tracking-[0.2em]">NENHUM_SINAL_DETECTADO_NO_BUFFER</span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {sortedShifts.map(shift => (
+                <ShiftCard 
+                  key={shift.id}
+                  shift={shift}
+                  members={members}
+                  onDelete={() => deleteShift(shift.id)}
+                  onEdit={() => setEditingShift(shift)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Info Box */}
-      <div className="bg-[#161821] border border-white/[0.06] rounded-2xl p-5 sm:p-6 space-y-4 mx-1">
-        <h3 className="text-sm font-bold text-[#f0f1f6] flex items-center gap-2">
-          <span className="text-lg">⚙️</span> Como automatizar (via Cron)?
+      {/* Technical Documentation Module */}
+      <div className="studio-panel rounded-lg p-8 border-l-4 border-accent-primary">
+        <h3 className="mono-label text-xs text-white font-black flex items-center gap-3 mb-6 uppercase tracking-[0.2em]">
+          <div className="w-8 h-8 rounded bg-accent-primary/10 border border-accent-primary/20 flex items-center justify-center">
+            <Terminal size={14} className="text-accent-primary" />
+          </div>
+          PROTOCOLO_DE_ACIONAMENTO_CRON_EXTERNO
         </h3>
-        <div className="text-xs text-[#9296ab] space-y-3 leading-relaxed">
-          <p>
-            As mensagens agora são enviadas tanto para o **Telegram** do grupo quanto para o **E-mail** individual de cada técnico escalado. Para automação real, use o comando curl abaixo em um serviço de Cron.
+        <div className="space-y-6">
+          <p className="text-xs text-text-secondary leading-relaxed uppercase tracking-tight">
+            Os sinais são processados e roteados via endpoints REST. Para transmissões recorrentes automatizadas,
+            interfira com a API interna usando o seguinte protocolo:
           </p>
-          <div className="bg-[#0a0b0f] p-4 rounded-xl font-mono text-purple-300 overflow-x-auto whitespace-pre text-[10px] sm:text-xs">
-{`# Exemplo de Cron (Segunda às 08:00)
-curl -X POST https://seu-app.com/api/notify/weekly`}
+          <div className="bg-black/60 border border-white/10 p-5 rounded-lg font-mono text-accent-cyan overflow-x-auto whitespace-pre text-[11px] leading-relaxed relative">
+            <div className="absolute top-2 right-3 mono-label text-[8px] text-text-muted">SHELL_STDOUT</div>
+{`# ACIONAR_SEQUÊNCIA_SEMANAL (SEG 08:00)
+curl -X POST https://sound-calendar.io/api/notify/weekly
+
+# ACIONAR_SINAL_DIÁRIO (DIARIAMENTE 07:00)
+curl -X POST https://sound-calendar.io/api/notify/daily`}
           </div>
         </div>
       </div>
 
-      {/* Edit Modal */}
+      {/* Modals remain functionally the same but benefit from global studio styles */}
       {editingShift && (
         <AddShiftModal 
           date={editingShift.date}
@@ -153,48 +189,40 @@ curl -X POST https://seu-app.com/api/notify/weekly`}
           onSave={(data) => {
             updateShift(editingShift.id, data);
             setEditingShift(null);
-            toast.success('Escala atualizada! ✅');
+            toast.success('Escala atualizada!');
           }}
           initialData={editingShift}
         />
       )}
 
-      {/* Preview Modal */}
       {preview && (
         <div 
-          className="fixed inset-0 bg-black/90 backdrop-blur-md z-[5000] flex items-center justify-center p-3 sm:p-6 animate-fade-in"
+          className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[5000] flex items-center justify-center p-6 animate-fade-in"
           onClick={() => setPreview(null)}
         >
           <div 
-            className="bg-[#161821] border border-white/10 rounded-3xl p-5 sm:p-8 w-full max-w-lg shadow-2xl animate-slide-up relative flex flex-col"
+            className="studio-panel rounded-lg p-8 w-full max-w-xl shadow-2xl animate-slide-up relative flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-xs font-bold text-white uppercase tracking-widest flex items-center gap-3">
-                <span className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-sm">🔍</span>
-                Prévia da Mensagem
-              </h3>
-              <button 
-                onClick={() => setPreview(null)} 
-                className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-[#5a5f75] hover:text-white transition-colors"
-              >
-                ✕
-              </button>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex flex-col">
+                <span className="mono-label text-[9px] text-accent-primary uppercase tracking-widest">VISUALIZAÇÃO_PRÉVIA</span>
+                <span className="text-xs font-black text-white uppercase tracking-widest">Rascunho de Carga Útil de Sinal</span>
+              </div>
+              <button onClick={() => setPreview(null)} className="w-8 h-8 rounded bg-white/5 border border-white/10 flex items-center justify-center mono-label text-[10px] font-black text-text-muted hover:text-white transition-all uppercase">DEL</button>
             </div>
             
-            <div className="bg-[#0a0b0f] p-5 rounded-2xl border border-white/5 font-mono text-[12px] sm:text-[13px] text-purple-200/90 whitespace-pre-wrap max-h-[50vh] overflow-y-auto leading-relaxed scrollbar-thin scrollbar-thumb-white/10">
+            <div className="bg-black/60 p-6 rounded border border-white/10 font-mono text-[12px] text-accent-primary/90 whitespace-pre-wrap max-h-[50vh] overflow-y-auto leading-relaxed shadow-inner">
               {preview.content}
             </div>
 
-            <div className="mt-6 sm:mt-8 pt-4 border-t border-white/5 flex flex-col gap-3">
-              <div className="text-[10px] text-[#5a5f75] text-center italic">
-                * Esta mensagem será enviada ao Telegram e replicada via E-mail.
-              </div>
+            <div className="mt-8 pt-6 border-t border-white/[0.03] flex flex-col gap-4">
+              <span className="mono-label text-[8px] text-text-muted text-center italic uppercase tracking-widest">PROTOCOLO_TRANSMISSÃO: TELEGRAM_HTML + SMTP_RELAY</span>
               <button 
                 onClick={() => setPreview(null)}
-                className="w-full py-3 rounded-xl text-xs font-bold bg-white/5 text-[#9296ab] border border-white/10 hover:text-white hover:bg-white/10 transition-all font-mono"
+                className="w-full py-4 rounded mono-label text-xs font-black bg-white/5 text-text-secondary border border-white/10 hover:text-white hover:bg-white/10 transition-all uppercase tracking-widest"
               >
-                FECHAR VISUALIZAÇÃO
+                FECHAR_JANELA_DE_VISUALIZAÇÃO
               </button>
             </div>
           </div>
@@ -204,33 +232,38 @@ curl -X POST https://seu-app.com/api/notify/weekly`}
   );
 }
 
-function AutomationCard({ title, desc, icon, loading, isPreviewLoading, onSend, onPreview }: any) {
+function AutomationCard({ title, desc, code, icon: Icon, loading, isPreviewLoading, onSend, onPreview }: any) {
   return (
-    <div className="bg-[#161821] border border-white/[0.06] rounded-3xl p-5 sm:p-6 flex flex-col gap-4 hover:border-white/10 hover:shadow-2xl hover:shadow-purple-500/5 transition-all group relative">
+    <div className="studio-card rounded-lg p-6 flex flex-col gap-6 group hover:border-accent-primary/50">
       <div className="flex items-center justify-between">
-        <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-          {icon}
+        <div className="w-14 h-14 rounded bg-black/40 border border-white/10 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform text-accent-primary">
+          <Icon size={24} />
         </div>
         <button 
           onClick={onPreview}
           disabled={loading || isPreviewLoading}
-          className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-sm hover:bg-white/10 transition-all disabled:opacity-30 shadow-sm"
-          title="Ver prévia"
+          className="px-2 h-10 rounded bg-white/5 border border-white/10 flex items-center justify-center text-text-secondary hover:bg-accent-primary/20 hover:text-accent-primary transition-all disabled:opacity-30"
+          title="PRÉVIA_SINAL"
         >
-          {isPreviewLoading ? '...' : '🔍'}
+          {isPreviewLoading ? '...' : <Search size={16} />}
         </button>
       </div>
       <div>
-        <h4 className="text-base font-bold text-[#f0f1f6]">{title}</h4>
-        <p className="text-xs text-[#5a5f75] mt-1.5 leading-relaxed">{desc}</p>
+        <h4 className="text-sm font-black text-white uppercase tracking-tight">{title}</h4>
+        <p className="text-[10px] text-text-muted mt-2 leading-relaxed h-8 line-clamp-2 uppercase">{desc}</p>
       </div>
       <button 
         onClick={onSend}
         disabled={loading || isPreviewLoading}
-        className="mt-2 w-full py-3 rounded-xl text-xs font-bold bg-white/[0.04] border border-white/[0.1] text-white hover:bg-white/[0.08] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+        className={`
+          w-full py-3 rounded mono-label text-[10px] font-black transition-all border uppercase tracking-widest
+          ${loading ? 'bg-white/5 border-white/10 text-text-muted cursor-wait' : 'bg-accent-primary/5 border-accent-primary/20 text-accent-primary hover:bg-accent-primary hover:text-white shadow-neon'}
+        `}
       >
-        {loading ? '⏳ Enviando...' : '✈️ Enviar Agora'}
+        {loading ? 'STATUS_TX_OCUPADO...' : 'EXECUTAR_SINAL_DE_TRANSMISSÃO'}
       </button>
     </div>
   );
 }
+
+
