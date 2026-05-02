@@ -4,6 +4,7 @@ import './globals.css';
 import { StoreProvider } from '@/components/Providers';
 import { MainLayout } from '@/components/MainLayout';
 import { ThemeProvider } from '@/components/ThemeProvider';
+import { ToastProvider } from '@/hooks/useToast';
 
 const manrope = Manrope({
   subsets: ['latin'],
@@ -46,11 +47,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="bg-bg-base text-text-primary antialiased min-h-screen selection:bg-accent-primary/10 selection:text-accent-primary">
         <ThemeProvider>
-          <StoreProvider>
-            <MainLayout>
-              {children}
-            </MainLayout>
-          </StoreProvider>
+          <ToastProvider>
+            <StoreProvider>
+              <MainLayout>
+                {children}
+              </MainLayout>
+            </StoreProvider>
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>

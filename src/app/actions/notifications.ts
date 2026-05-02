@@ -49,6 +49,7 @@ export async function getNotificationDraftAction(type: SummaryType): Promise<{ s
   try {
     logger.info(`Generating notification draft for type: ${type}`);
     const [shifts, members] = await Promise.all([getShiftsAction(), getMembersAction()]);
+    logger.debug(`[notifications] Base data loaded. shifts=${shifts.length}, members=${members.length}, type=${type}`);
     const now = new Date();
     let message = '';
     let targetShifts: Shift[] = [];
@@ -63,6 +64,7 @@ export async function getNotificationDraftAction(type: SummaryType): Promise<{ s
         logger.warn('No shifts found for monthly summary.');
         return { success: false, error: 'Nenhuma escala encontrada para este mês.' };
       }
+      logger.debug(`[notifications] Monthly target count=${targetShifts.length}`);
 
       message = '📅 <b>ESCALA MENSAL - ' + escapeHTML(format(now, 'MMMM/yyyy', { locale: ptBR }).toUpperCase()) + '</b>\n\n';
       targetShifts.forEach(s => {
@@ -83,6 +85,7 @@ export async function getNotificationDraftAction(type: SummaryType): Promise<{ s
         logger.warn('No shifts found for weekly summary.');
         return { success: false, error: 'Nenhuma escala encontrada para esta semana.' };
       }
+      logger.debug(`[notifications] Weekly target count=${targetShifts.length}, start=${start.toISOString()}, end=${end.toISOString()}`);
 
       message = '🗓️ <b>ESCALA DA SEMANA (' + format(start, 'dd/MM') + ' a ' + format(end, 'dd/MM') + ')</b>\n\n';
       targetShifts.forEach(s => {
@@ -96,6 +99,7 @@ export async function getNotificationDraftAction(type: SummaryType): Promise<{ s
         logger.warn('No shifts found for daily summary.');
         return { success: false, error: 'Hoje não há escalas programadas.' };
       }
+      logger.debug(`[notifications] Daily target count=${targetShifts.length}, date=${now.toISOString()}`);
 
       message = '🔔 <b>ESCALA DE HOJE (' + format(now, 'dd/MM', { locale: ptBR }) + ')</b>\n\n';
       targetShifts.forEach(s => {
@@ -105,7 +109,7 @@ export async function getNotificationDraftAction(type: SummaryType): Promise<{ s
       });
     }
 
-    logger.info(`Successfully generated draft for ${type}.`);
+    logger.info(`Successfully generated draft for ${type}. shifts=${targetShifts.length}`);
     return { 
       success: true, 
       draft: message,

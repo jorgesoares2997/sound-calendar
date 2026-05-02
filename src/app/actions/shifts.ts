@@ -64,12 +64,17 @@ export async function getShiftsAction(): Promise<Shift[]> {
 export async function saveShiftsAction(shifts: Shift[]): Promise<{ success: boolean; error?: string }> {
   try {
     const supabase = getSupabaseAdminClient();
+    logger.debug(`saveShiftsAction called with ${shifts.length} shift(s).`);
     // Final deduplication for safety: Ensure no two shifts have the same date, time and type
     const uniqueShifts = shifts.filter((shift, index, self) =>
       index === self.findIndex((s) => (
         s.date === shift.date && s.startTime === shift.startTime && s.type === shift.type
       ))
     );
+    const removedDuplicates = shifts.length - uniqueShifts.length;
+    if (removedDuplicates > 0) {
+      logger.warn(`saveShiftsAction deduplicated ${removedDuplicates} duplicated shift(s).`);
+    }
 
     const rows = uniqueShifts.map(toRow);
     if (rows.length > 0) {
@@ -85,12 +90,14 @@ export async function saveShiftsAction(shifts: Shift[]): Promise<{ success: bool
         logger.error('Erro ao limpar escalas removidas', cleanupError);
         return { success: false, error: cleanupError.message };
       }
+      logger.debug(`saveShiftsAction cleanup complete. kept=${rows.length}`);
     } else {
       const { error: clearError } = await supabase.from('shifts').delete().neq('id', '');
       if (clearError) {
         logger.error('Erro ao remover todas as escalas', clearError);
         return { success: false, error: clearError.message };
       }
+      logger.debug('saveShiftsAction removed all shifts because input was empty.');
     }
 
     logger.info(`Salvas com sucesso ${uniqueShifts.length} escalas.`);

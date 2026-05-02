@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import type { Shift, Member, ShiftType } from '@/types';
 import { SHIFT_TYPES } from './Calendar';
 
@@ -14,7 +13,6 @@ type Tab = 'mensal' | 'isolada';
 type SaveMode = 'all' | 'filled';
 
 export function ScaleCreator({ members, onSave }: ScaleCreatorProps) {
-  const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>('mensal');
   const [saveMode, setSaveMode] = useState<SaveMode>('filled');
   const [month, setMonth] = useState(new Date().getMonth() + 1);
@@ -71,7 +69,6 @@ export function ScaleCreator({ members, onSave }: ScaleCreatorProps) {
 
   const saveSingle = (index: number) => {
     onSave([generatedShifts[index]]);
-    router.push('/automacao');
   };
 
   const saveAll = () => {
@@ -81,7 +78,6 @@ export function ScaleCreator({ members, onSave }: ScaleCreatorProps) {
     
     if (shiftsToSave.length > 0) {
       onSave(shiftsToSave);
-      router.push('/automacao');
     }
   };
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type { Member, Shift, AppSettings } from '@/types';
 import { getShiftsAction, saveShiftsAction, syncMonthShiftsAction } from '@/app/actions/shifts';
 import { getMembersAction, saveMembersAction } from '@/app/actions/members';
@@ -19,11 +19,23 @@ const DEFAULT_SETTINGS: AppSettings = {
   dailyReminder: true,
 };
 
+type PersistStatus = {
+  state: 'idle' | 'saving' | 'success' | 'error';
+  message?: string;
+  updatedAt: number;
+};
+
 export function useStore() {
   const [members, setMembersState] = useState<Member[]>(DEFAULT_MEMBERS);
   const [shifts, setShiftsState] = useState<Shift[]>([]);
   const [settings, setSettingsState] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [hydrated, setHydrated] = useState(false);
+  const [shiftPersistStatus, setShiftPersistStatus] = useState<PersistStatus>({
+    state: 'idle',
+    updatedAt: 0,
+  });
+  const membersHydrationSkippedRef = useRef(false);
+  const settingsHydrationSkippedRef = useRef(false);
 
   // Sync with server on mount
   useEffect(() => {
@@ -48,18 +60,58 @@ export function useStore() {
   // Shifts persistence
   useEffect(() => {
     if (!hydrated) return;
-    saveShiftsAction(shifts).catch((e) => logger.error('useStore: Erro ao persistir escalas', e));
+    setShiftPersistStatus({
+      state: 'saving',
+      message: 'Sincronizando escalas...',
+      updatedAt: Date.now(),
+    });
+
+    saveShiftsAction(shifts)
+      .then((result) => {
+        if (result.success) {
+          logger.info(`useStore: escalas persistidas com sucesso (${shifts.length} registros).`);
+          setShiftPersistStatus({
+            state: 'success',
+            message: `${shifts.length} escala(s) salva(s) com sucesso.`,
+            updatedAt: Date.now(),
+          });
+          return;
+        }
+
+        logger.error('useStore: falha ao persistir escalas', result.error);
+        setShiftPersistStatus({
+          state: 'error',
+          message: result.error || 'Não foi possível salvar as escalas.',
+          updatedAt: Date.now(),
+        });
+      })
+      .catch((error) => {
+        logger.error('useStore: Erro ao persistir escalas', error);
+        setShiftPersistStatus({
+          state: 'error',
+          message: (error as Error).message || 'Erro inesperado ao salvar escalas.',
+          updatedAt: Date.now(),
+        });
+      });
   }, [hydrated, shifts]);
 
   // Members persistence
   useEffect(() => {
     if (!hydrated) return;
+    if (!membersHydrationSkippedRef.current) {
+      membersHydrationSkippedRef.current = true;
+      return;
+    }
     saveMembersAction(members).catch((e) => logger.error('useStore: Erro ao persistir membros', e));
   }, [hydrated, members]);
 
   // Settings persistence
   useEffect(() => {
     if (!hydrated) return;
+    if (!settingsHydrationSkippedRef.current) {
+      settingsHydrationSkippedRef.current = true;
+      return;
+    }
     saveSettingsAction(settings).catch((e) => logger.error('useStore: Erro ao persistir configurações', e));
   }, [hydrated, settings]);
 
@@ -192,6 +244,7 @@ export function useStore() {
     members,
     shifts,
     settings,
+    shiftPersistStatus,
     setSettings,
     addMember,
     updateMember,

@@ -1,6 +1,7 @@
 'use server';
 
 import { BotInfo, TelegramResult } from '@/utils/telegram';
+import { logger } from '@/utils/logger';
 
 const TELEGRAM_API = 'https://api.telegram.org/bot';
 
@@ -14,8 +15,10 @@ export async function sendTelegramMessageAction(
 ): Promise<TelegramResult> {
   const token = overrides?.botToken || process.env.TELEGRAM_BOT_TOKEN;
   const chatId = overrides?.chatId || process.env.TELEGRAM_CHAT_ID;
+  logger.debug(`[telegram] sendTelegramMessageAction called. hasToken=${Boolean(token)} hasChatId=${Boolean(chatId)}`);
 
   if (!token || !chatId) {
+    logger.warn('[telegram] Missing token/chatId while sending telegram message.');
     return { ok: false, error: 'Token do bot ou Chat ID não configurados no servidor.' };
   }
 
@@ -27,11 +30,13 @@ export async function sendTelegramMessageAction(
     });
     const data = await res.json();
     if (!data.ok) {
-      console.error('Telegram API Error:', data);
+      logger.error('[telegram] Telegram API Error', data);
       return { ok: false, error: `Telegram: ${data.description || 'Erro desconhecido'}` };
     }
+    logger.info('[telegram] Message sent successfully.');
     return { ok: true };
   } catch (err: unknown) {
+    logger.error('[telegram] Unexpected error while sending message', err);
     return { ok: false, error: `Erro no servidor: ${(err as Error).message}` };
   }
 }

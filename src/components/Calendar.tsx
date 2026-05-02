@@ -56,6 +56,7 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
   const [showModal, setShowModal] = useState(false);
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [envStatus, setEnvStatus] = useState<{ hasToken: boolean; hasChatId: boolean } | null>(null);
+  const [showAllShiftsModal, setShowAllShiftsModal] = useState(false);
 
   useEffect(() => {
     getEnvConfigStatusAction().then(setEnvStatus);
@@ -77,6 +78,13 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
     [shifts, selectedDate],
   );
 
+  const shiftsForModalDay = useMemo(() => {
+    const targetDate = selectedDate ?? todayStr;
+    return shifts
+      .filter((s) => s.date === targetDate)
+      .sort((a, b) => a.startTime.localeCompare(b.startTime));
+  }, [selectedDate, shifts, todayStr]);
+
   const upcomingShifts = useMemo(() => {
     const now = new Date(); now.setHours(0, 0, 0, 0);
     const in7 = new Date(now); in7.setDate(in7.getDate() + 7);
@@ -96,6 +104,13 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
 
   const getShiftsForDay = (day: number) =>
     shifts.filter((s) => s.date === toISODate(viewYear, viewMonth, day));
+
+  const handleViewAllDayShifts = () => {
+    if (!selectedDate) {
+      setSelectedDate(todayStr);
+    }
+    setShowAllShiftsModal(true);
+  };
 
   const handleSendReminder = async (shift: Shift) => {
     const isConfigured = (settings.botToken && settings.groupChatId) || (envStatus?.hasToken && envStatus?.hasChatId);
@@ -237,7 +252,10 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
             )}
           </div>
 
-          <button className="w-full mt-8 py-3 text-xs font-bold text-slate-500 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors uppercase tracking-widest">
+          <button
+            onClick={handleViewAllDayShifts}
+            className="w-full mt-8 py-3 text-xs font-bold text-slate-500 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors uppercase tracking-widest"
+          >
             Ver Tudo
           </button>
         </div>
@@ -275,6 +293,61 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
             toast.success('Escala adicionada!');
           }}
         />
+      )}
+
+      {showAllShiftsModal && (
+        <div
+          className="fixed inset-0 theme-overlay-soft backdrop-blur-sm z-[7000] flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setShowAllShiftsModal(false)}
+        >
+          <div
+            className="glass-card rounded-[32px] w-full max-w-2xl max-h-[85vh] overflow-y-auto p-8 theme-border-strong shadow-lift"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4 mb-6">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest theme-text-muted">Escalas do Dia</p>
+                <h3 className="text-2xl font-bold theme-text-primary">
+                  {formatLong(selectedDate ?? todayStr)}
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowAllShiftsModal(false)}
+                className="px-3 py-2 text-xs font-bold rounded-xl theme-surface theme-text-secondary uppercase tracking-wider"
+              >
+                Fechar
+              </button>
+            </div>
+
+            {shiftsForModalDay.length === 0 ? (
+              <div className="py-10 text-center theme-text-muted text-sm font-medium">
+                Nenhuma escala registrada para este dia.
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {shiftsForModalDay.map((shift) => (
+                  <div key={shift.id} className="theme-card-solid border theme-border rounded-2xl p-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <h4 className="text-sm font-bold theme-text-primary uppercase tracking-tight">{shift.title}</h4>
+                        <p className="text-xs theme-text-secondary mt-1">{shift.startTime} - {shift.endTime}</p>
+                      </div>
+                      <span
+                        className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full"
+                        style={{
+                          color: getShiftMeta(shift.type).color,
+                          backgroundColor: `${getShiftMeta(shift.type).color}20`,
+                        }}
+                      >
+                        {getShiftMeta(shift.type).label}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

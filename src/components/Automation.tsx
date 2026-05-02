@@ -24,28 +24,35 @@ export function Automation({ toast }: AutomationProps) {
     action: () => Promise<{ success?: boolean; error?: string; emailsSent?: number }>,
   ) => {
     setLoading(`send-${type}`);
+    console.info('[Automation] Sending notification', { type });
     const result = await action();
     setLoading(null);
 
     if (result.success) {
       const total = typeof result.emailsSent === 'number' ? ` (${result.emailsSent} e-mails)` : '';
       toast.success(`Notificação enviada com sucesso${total}`);
+      console.info('[Automation] Notification sent successfully', { type, result });
       return;
     }
 
+    console.error('[Automation] Failed to send notification', { type, result });
     toast.error(result.error || 'Falha ao enviar notificação');
   };
 
   const handlePreview = async (type: SummaryType) => {
     setLoading(`preview-${type}`);
+    console.info('[Automation] Generating telegram preview', { type });
     const result = await getNotificationDraftAction(type);
     setLoading(null);
 
     if (!result.success || !result.draft) {
-      toast.error(result.error || 'Falha ao gerar prévia');
+      console.error('[Automation] Failed to generate preview', { type, result });
+      toast.error(result.error || `Falha ao gerar prévia ${type}. Verifique logs e dados das escalas.`);
       return;
     }
 
+    console.info('[Automation] Preview generated', { type, chars: result.draft.length });
+    toast.success(`Prévia ${type} gerada com sucesso.`);
     setPreview({ type, content: result.draft });
   };
 

@@ -5,14 +5,13 @@ import { Sidebar } from '@/components/Sidebar';
 import { Topbar } from '@/components/Topbar';
 import { useAppStore } from '@/components/Providers';
 import { getEnvConfigStatusAction } from '@/app/actions/telegram';
-import { ToastContainer } from '@/components/Toast';
-import { useToast } from '@/hooks/useToast';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export function MainLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [envStatus, setEnvStatus] = useState<{ hasToken: boolean; hasChatId: boolean } | null>(null);
   const { settings } = useAppStore();
-  const { toasts } = useToast();
 
   useEffect(() => {
     getEnvConfigStatusAction().then(setEnvStatus);
@@ -44,7 +43,16 @@ export function MainLayout({ children }: { children: ReactNode }) {
         </div>
       </main>
 
-      <ToastContainer toasts={toasts} />
+      <ToastContainer
+        position="bottom-right"
+        autoClose={4000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+        draggable
+        theme="dark"
+      />
     </div>
   );
 }
