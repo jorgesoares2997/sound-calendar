@@ -57,6 +57,8 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [envStatus, setEnvStatus] = useState<{ hasToken: boolean; hasChatId: boolean } | null>(null);
   const [showAllShiftsModal, setShowAllShiftsModal] = useState(false);
+  const [showDeleteShiftsModal, setShowDeleteShiftsModal] = useState(false);
+  const [selectedShiftIdsToDelete, setSelectedShiftIdsToDelete] = useState<string[]>([]);
 
   useEffect(() => {
     getEnvConfigStatusAction().then(setEnvStatus);
@@ -85,6 +87,11 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
       .sort((a, b) => a.startTime.localeCompare(b.startTime));
   }, [selectedDate, shifts, todayStr]);
 
+  const allShiftsSorted = useMemo(
+    () => [...shifts].sort((a, b) => `${a.date} ${a.startTime}`.localeCompare(`${b.date} ${b.startTime}`)),
+    [shifts],
+  );
+
   const upcomingShifts = useMemo(() => {
     const now = new Date(); now.setHours(0, 0, 0, 0);
     const in7 = new Date(now); in7.setDate(in7.getDate() + 7);
@@ -110,6 +117,36 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
       setSelectedDate(todayStr);
     }
     setShowAllShiftsModal(true);
+  };
+
+  const toggleShiftForDeletion = (shiftId: string) => {
+    setSelectedShiftIdsToDelete((prev) =>
+      prev.includes(shiftId) ? prev.filter((id) => id !== shiftId) : [...prev, shiftId],
+    );
+  };
+
+  const handleDeleteSelectedShifts = () => {
+    if (selectedShiftIdsToDelete.length === 0) {
+      toast.info('Selecione ao menos uma escala para apagar.');
+      return;
+    }
+
+    selectedShiftIdsToDelete.forEach((id) => onDeleteShift(id));
+    toast.success(`${selectedShiftIdsToDelete.length} escala(s) apagada(s) com sucesso.`);
+    setSelectedShiftIdsToDelete([]);
+    setShowDeleteShiftsModal(false);
+  };
+
+  const handleDeleteAllShifts = () => {
+    if (allShiftsSorted.length === 0) {
+      toast.info('Nao ha escalas para apagar.');
+      return;
+    }
+
+    allShiftsSorted.forEach((shift) => onDeleteShift(shift.id));
+    toast.success('Todas as escalas foram apagadas.');
+    setSelectedShiftIdsToDelete([]);
+    setShowDeleteShiftsModal(false);
   };
 
   const handleSendReminder = async (shift: Shift) => {
@@ -258,6 +295,12 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
           >
             Ver Tudo
           </button>
+          <button
+            onClick={() => setShowDeleteShiftsModal(true)}
+            className="w-full mt-3 py-3 text-xs font-bold text-red-500 border border-red-200 dark:border-red-900/40 rounded-xl hover:bg-red-50/70 dark:hover:bg-red-900/20 transition-colors uppercase tracking-widest"
+          >
+            Apagar Escalas
+          </button>
         </div>
 
         {/* Selected Date Actions */}
@@ -346,6 +389,85 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {showDeleteShiftsModal && (
+        <div
+          className="fixed inset-0 theme-overlay-soft backdrop-blur-sm z-[7100] flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setShowDeleteShiftsModal(false)}
+        >
+          <div
+            className="glass-card rounded-[32px] w-full max-w-3xl max-h-[85vh] overflow-y-auto p-8 theme-border-strong shadow-lift"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4 mb-6">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-red-500">Gerenciar Exclusao</p>
+                <h3 className="text-2xl font-bold theme-text-primary">Apagar escalas registradas</h3>
+                <p className="text-xs theme-text-secondary mt-1">
+                  Selecione uma ou mais escalas para apagar, ou remova tudo de uma vez.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowDeleteShiftsModal(false)}
+                className="px-3 py-2 text-xs font-bold rounded-xl theme-surface theme-text-secondary uppercase tracking-wider"
+              >
+                Fechar
+              </button>
+            </div>
+
+            {allShiftsSorted.length === 0 ? (
+              <div className="py-10 text-center theme-text-muted text-sm font-medium">
+                Nao ha escalas cadastradas.
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {allShiftsSorted.map((shift) => {
+                  const checked = selectedShiftIdsToDelete.includes(shift.id);
+                  return (
+                    <label
+                      key={shift.id}
+                      className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                        checked ? 'border-red-400 bg-red-50/50 dark:bg-red-900/20' : 'theme-border theme-card-solid'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleShiftForDeletion(shift.id)}
+                        className="w-4 h-4 accent-red-500"
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm font-bold theme-text-primary uppercase tracking-tight">{shift.title}</p>
+                        <p className="text-xs theme-text-secondary mt-1">
+                          {formatLong(shift.date)} - {shift.startTime} - {shift.endTime}
+                        </p>
+                      </div>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-red-500">
+                        {getShiftMeta(shift.type).label}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row gap-3 mt-6">
+              <button
+                onClick={handleDeleteSelectedShifts}
+                className="flex-1 py-3 rounded-xl text-xs font-bold uppercase tracking-widest bg-red-600 text-white hover:bg-red-700 transition-colors"
+              >
+                Apagar selecionadas
+              </button>
+              <button
+                onClick={handleDeleteAllShifts}
+                className="flex-1 py-3 rounded-xl text-xs font-bold uppercase tracking-widest border border-red-300 text-red-600 hover:bg-red-50/70 dark:hover:bg-red-900/20 transition-colors"
+              >
+                Apagar todas
+              </button>
+            </div>
           </div>
         </div>
       )}

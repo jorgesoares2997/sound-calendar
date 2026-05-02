@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useAppStore } from '@/components/Providers';
 import {
   getNotificationDraftAction,
@@ -15,9 +15,53 @@ interface AutomationProps {
 }
 
 export function Automation({ toast }: AutomationProps) {
-  const { settings, setSettings: updateSettings } = useAppStore();
+  const { settings, setSettings: updateSettings, shifts, deleteShift } = useAppStore();
   const [loading, setLoading] = useState<string | null>(null);
   const [preview, setPreview] = useState<{ type: SummaryType; content: string } | null>(null);
+  const [showDeleteShiftsModal, setShowDeleteShiftsModal] = useState(false);
+  const [selectedShiftIdsToDelete, setSelectedShiftIdsToDelete] = useState<string[]>([]);
+
+  const allShiftsSorted = useMemo(
+    () => [...shifts].sort((a, b) => `${a.date} ${a.startTime}`.localeCompare(`${b.date} ${b.startTime}`)),
+    [shifts],
+  );
+
+  const formatLong = (dateStr: string) => {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString('pt-BR', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    });
+  };
+
+  const toggleShiftForDeletion = (shiftId: string) => {
+    setSelectedShiftIdsToDelete((prev) =>
+      prev.includes(shiftId) ? prev.filter((id) => id !== shiftId) : [...prev, shiftId],
+    );
+  };
+
+  const handleDeleteSelectedShifts = () => {
+    if (selectedShiftIdsToDelete.length === 0) {
+      toast.info('Selecione ao menos uma escala para apagar.');
+      return;
+    }
+
+    selectedShiftIdsToDelete.forEach((id) => deleteShift(id));
+    toast.success(`${selectedShiftIdsToDelete.length} escala(s) apagada(s) com sucesso.`);
+    setSelectedShiftIdsToDelete([]);
+    setShowDeleteShiftsModal(false);
+  };
+
+  const handleDeleteAllShifts = () => {
+    if (allShiftsSorted.length === 0) {
+      toast.info('Nao ha escalas para apagar.');
+      return;
+    }
+
+    allShiftsSorted.forEach((shift) => deleteShift(shift.id));
+    toast.success('Todas as escalas foram apagadas.');
+    setSelectedShiftIdsToDelete([]);
+    setShowDeleteShiftsModal(false);
+  };
 
   const handleManualSend = async (
     type: SummaryType,
@@ -74,7 +118,7 @@ export function Automation({ toast }: AutomationProps) {
             <span className="material-symbols-outlined text-3xl">sunny</span>
           </div>
           <div>
-            <h3 className="text-xl font-bold theme-text-primary mb-2">Sinal Diário</h3>
+            <h3 className="text-xl font-bold theme-text-primary mb-2">Escala de Hoje</h3>
             <p className="theme-text-secondary text-sm font-medium">Lembretes automáticos enviados todas as manhãs para a equipe do dia.</p>
           </div>
           <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
@@ -82,7 +126,7 @@ export function Automation({ toast }: AutomationProps) {
             <button 
               onClick={() => {
                 updateSettings((prev) => ({ ...prev, dailyReminder: !prev.dailyReminder }));
-                toast.info(`Sinal diário ${!settings.dailyReminder ? 'ativado' : 'desativado'}`);
+                toast.info(`Escala de hoje ${!settings.dailyReminder ? 'ativada' : 'desativada'}`);
               }}
               className={`w-12 h-6 rounded-full p-1 transition-all ${settings.dailyReminder ? 'bg-accent-primary' : 'bg-slate-200 dark:bg-slate-800'}`}
             >
@@ -135,6 +179,12 @@ export function Automation({ toast }: AutomationProps) {
               Execute o envio mensal, semanal ou diário imediatamente, com prévia antes do disparo.
             </p>
           </div>
+          <button
+            onClick={() => setShowDeleteShiftsModal(true)}
+            className="px-4 py-2 text-xs font-bold text-red-500 border border-red-200 dark:border-red-900/40 rounded-xl hover:bg-red-50/70 dark:hover:bg-red-900/20 transition-colors uppercase tracking-widest"
+          >
+            Apagar Escalas
+          </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -155,8 +205,8 @@ export function Automation({ toast }: AutomationProps) {
             onSend={() => handleManualSend('weekly', sendWeeklySummaryAction)}
           />
           <ManualTriggerCard
-            title="Sinal Diário"
-            subtitle="Escalas registradas para hoje"
+            title="Escala de Hoje"
+            subtitle="Escala de hoje"
             sending={loading === 'send-daily'}
             previewing={loading === 'preview-daily'}
             onPreview={() => handlePreview('daily')}
@@ -263,6 +313,82 @@ export function Automation({ toast }: AutomationProps) {
             <pre className="theme-card-solid border theme-border rounded-2xl p-4 text-xs whitespace-pre-wrap max-h-[55vh] overflow-auto theme-text-secondary">
               {preview.content}
             </pre>
+          </div>
+        </div>
+      )}
+
+      {showDeleteShiftsModal && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-md z-[5100] flex items-center justify-center p-4"
+          onClick={() => setShowDeleteShiftsModal(false)}
+        >
+          <div
+            className="w-full max-w-3xl theme-surface rounded-3xl border theme-border shadow-xl p-6 md:p-8 max-h-[85vh] overflow-y-auto"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4 mb-6">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-red-500">Gerenciar Exclusao</p>
+                <h3 className="text-2xl font-bold theme-text-primary">Apagar escalas registradas</h3>
+                <p className="text-xs theme-text-secondary mt-1">
+                  Selecione uma ou mais escalas para apagar, ou remova tudo de uma vez.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowDeleteShiftsModal(false)}
+                className="px-3 py-2 text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 uppercase tracking-wider"
+              >
+                Fechar
+              </button>
+            </div>
+
+            {allShiftsSorted.length === 0 ? (
+              <div className="py-10 text-center theme-text-muted text-sm font-medium">
+                Nao ha escalas cadastradas.
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {allShiftsSorted.map((shift) => {
+                  const checked = selectedShiftIdsToDelete.includes(shift.id);
+                  return (
+                    <label
+                      key={shift.id}
+                      className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                        checked ? 'border-red-400 bg-red-50/50 dark:bg-red-900/20' : 'theme-border theme-card-solid'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleShiftForDeletion(shift.id)}
+                        className="w-4 h-4 accent-red-500"
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm font-bold theme-text-primary uppercase tracking-tight">{shift.title}</p>
+                        <p className="text-xs theme-text-secondary mt-1">
+                          {formatLong(shift.date)} - {shift.startTime} - {shift.endTime}
+                        </p>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row gap-3 mt-6">
+              <button
+                onClick={handleDeleteSelectedShifts}
+                className="flex-1 py-3 rounded-xl text-xs font-bold uppercase tracking-widest bg-red-600 text-white hover:bg-red-700 transition-colors"
+              >
+                Apagar selecionadas
+              </button>
+              <button
+                onClick={handleDeleteAllShifts}
+                className="flex-1 py-3 rounded-xl text-xs font-bold uppercase tracking-widest border border-red-300 text-red-600 hover:bg-red-50/70 dark:hover:bg-red-900/20 transition-colors"
+              >
+                Apagar todas
+              </button>
+            </div>
           </div>
         </div>
       )}
