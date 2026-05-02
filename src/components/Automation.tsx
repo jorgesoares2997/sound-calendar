@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAppStore } from '@/components/Providers';
 import {
   getNotificationDraftAction,
@@ -20,6 +20,43 @@ export function Automation({ toast }: AutomationProps) {
   const [preview, setPreview] = useState<{ type: SummaryType; content: string } | null>(null);
   const [showDeleteShiftsModal, setShowDeleteShiftsModal] = useState(false);
   const [selectedShiftIdsToDelete, setSelectedShiftIdsToDelete] = useState<string[]>([]);
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const getNextDailyRun = (current: Date) => {
+    const target = new Date(current);
+    target.setHours(6, 0, 0, 0);
+    if (target <= current) target.setDate(target.getDate() + 1);
+    return target;
+  };
+
+  const getNextWeeklyRun = (current: Date) => {
+    const target = new Date(current);
+    const day = target.getDay(); // 0-dom, 1-seg
+    const daysUntilMonday = day === 1 ? 0 : (8 - day) % 7;
+    target.setDate(target.getDate() + daysUntilMonday);
+    target.setHours(8, 0, 0, 0);
+    if (target <= current) target.setDate(target.getDate() + 7);
+    return target;
+  };
+
+  const formatCountdown = (target: Date) => {
+    const diffMs = Math.max(0, target.getTime() - now.getTime());
+    const totalSeconds = Math.floor(diffMs / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    if (days > 0) return `${days}d ${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}m`;
+    return `${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s`;
+  };
+
+  const nextDailyRun = useMemo(() => getNextDailyRun(now), [now]);
+  const nextWeeklyRun = useMemo(() => getNextWeeklyRun(now), [now]);
 
   const allShiftsSorted = useMemo(
     () => [...shifts].sort((a, b) => `${a.date} ${a.startTime}`.localeCompare(`${b.date} ${b.startTime}`)),
@@ -122,7 +159,12 @@ export function Automation({ toast }: AutomationProps) {
             <p className="theme-text-secondary text-sm font-medium">Lembretes automáticos enviados todas as manhãs para a equipe do dia.</p>
           </div>
           <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
-            <span className="text-[10px] font-bold tracking-widest text-accent-primary uppercase">08:00 AM</span>
+            <div className="text-right">
+              <span className="text-[10px] font-bold tracking-widest text-accent-primary uppercase block">06:00</span>
+              <span className="text-[9px] theme-text-muted font-bold tracking-widest uppercase block mt-1">
+                {formatCountdown(nextDailyRun)}
+              </span>
+            </div>
             <button 
               onClick={() => {
                 updateSettings((prev) => ({ ...prev, dailyReminder: !prev.dailyReminder }));
@@ -145,9 +187,20 @@ export function Automation({ toast }: AutomationProps) {
             <p className="theme-text-secondary text-sm font-medium">Resumo da escala da próxima semana enviado todos os domingos.</p>
           </div>
           <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
-            <span className="text-[10px] font-bold tracking-widest text-accent-primary uppercase">DOM 20:00</span>
-            <button className="w-12 h-6 bg-slate-200 dark:bg-slate-800 rounded-full p-1 opacity-50 cursor-not-allowed">
-              <div className="w-4 h-4 bg-white rounded-full shadow-sm" />
+            <div className="text-right">
+              <span className="text-[10px] font-bold tracking-widest text-accent-primary uppercase block">SEG 08:00</span>
+              <span className="text-[9px] theme-text-muted font-bold tracking-widest uppercase block mt-1">
+                {formatCountdown(nextWeeklyRun)}
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                updateSettings((prev) => ({ ...prev, weeklyReminder: !prev.weeklyReminder }));
+                toast.info(`Sequencia semanal ${!settings.weeklyReminder ? 'ativada' : 'desativada'}`);
+              }}
+              className={`w-12 h-6 rounded-full p-1 transition-all ${(settings.weeklyReminder ?? true) ? 'bg-accent-primary' : 'bg-slate-200 dark:bg-slate-800'}`}
+            >
+              <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-all ${(settings.weeklyReminder ?? true) ? 'translate-x-6' : 'translate-x-0'}`} />
             </button>
           </div>
         </div>

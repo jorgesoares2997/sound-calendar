@@ -17,6 +17,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     '🎛️ Lembrete de escala!\n\n{member} você está na escala de *{date}* ({shift}).\n\nFique atento ao horário! 🙏',
   defaultReminderHours: 24,
   dailyReminder: true,
+  weeklyReminder: true,
 };
 
 type PersistStatus = {

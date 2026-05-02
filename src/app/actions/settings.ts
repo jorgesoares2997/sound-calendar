@@ -20,6 +20,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   reminderMessage:
     '🎛️ Lembrete de escala!\n\n{member} você está na escala de *{date}* ({shift}).\n\nFique atento ao horário! 🙏',
   defaultReminderHours: 24,
+  dailyReminder: true,
+  weeklyReminder: true,
 };
 
 function toAppSettings(row: SettingsRow): AppSettings {
@@ -29,6 +31,8 @@ function toAppSettings(row: SettingsRow): AppSettings {
     teamName: row.team_name,
     reminderMessage: row.reminder_message,
     defaultReminderHours: row.default_reminder_hours,
+    dailyReminder: true,
+    weeklyReminder: true,
   };
 }
 

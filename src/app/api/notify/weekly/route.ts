@@ -1,10 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sendWeeklySummaryAction } from '@/app/actions/notifications';
+import { getNotificationDraftAction, sendWeeklySummaryAction } from '@/app/actions/notifications';
 import { isAuthorizedCronRequest } from '@/lib/cron-auth';
 
 async function handleWeekly(request: NextRequest) {
   if (!isAuthorizedCronRequest(request)) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const draft = await getNotificationDraftAction('weekly');
+  if (!draft.success) {
+    return NextResponse.json(
+      {
+        success: true,
+        skipped: true,
+        reason: draft.error || 'Sem escalas para esta semana',
+      },
+      { status: 200 },
+    );
   }
 
   const result = await sendWeeklySummaryAction();
