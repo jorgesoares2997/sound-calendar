@@ -4,19 +4,12 @@ import { getShiftsAction } from './shifts';
 import { getMembersAction } from './members';
 import { sendTelegramMessageAction } from './telegram';
 import { sendEmailAction } from './email';
+import { sendWhatsAppMessageAction } from './whatsapp';
 import { format, parseISO, isSameDay, isWithinInterval, startOfWeek, endOfWeek } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { Member, Shift } from '@/types';
 import { logger } from '@/utils/logger';
-const ESCAPE_MAP: Record<string, string> = {
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-};
-
-function escapeHTML(str: string): string {
-  return str.replace(/[&<>]/g, (tag) => ESCAPE_MAP[tag] || tag);
-}
+// Removing HTML escaping as it's not needed for WhatsApp
 
 function getMemberInfo(ids: string[], members: Member[], useTags = false) {
   if (ids.length === 0) return 'Ninguém escalado';
@@ -25,10 +18,10 @@ function getMemberInfo(ids: string[], members: Member[], useTags = false) {
     const m = members.find(m => m.id === id);
     if (!m) return 'Desconhecido';
     
-    // Always escape names and telegram IDs for HTML safety
-    const safeName = escapeHTML(m.name);
+    // For WhatsApp, we don't need HTML escaping
+    const safeName = m.name;
     if (useTags && m.telegramId) {
-      return `<code>@${escapeHTML(m.telegramId.replace('@', ''))}</code>`;
+      return `@${m.telegramId.replace('@', '')}`;
     }
     return safeName;
   }).join(', ');
@@ -66,10 +59,10 @@ export async function getNotificationDraftAction(type: SummaryType): Promise<{ s
       }
       logger.debug(`[notifications] Monthly target count=${targetShifts.length}`);
 
-      message = '📅 <b>ESCALA MENSAL - ' + escapeHTML(format(now, 'MMMM/yyyy', { locale: ptBR }).toUpperCase()) + '</b>\n\n';
+      message = '📅 *ESCALA MENSAL - ' + format(now, 'MMMM/yyyy', { locale: ptBR }).toUpperCase() + '*\n\n';
       targetShifts.forEach(s => {
         const date = format(parseISO(s.date), "dd/MM ' ('eee')'", { locale: ptBR });
-        message += '• ' + date + ': ' + s.startTime + ' - <b>' + getMemberInfo(s.memberIds, members, true) + '</b> (' + escapeHTML(s.title) + ')\n';
+        message += '• ' + date + ': ' + s.startTime + ' - *' + getMemberInfo(s.memberIds, members, true) + '* (' + s.title + ')\n';
       });
     } 
     else if (type === 'weekly') {
@@ -87,10 +80,10 @@ export async function getNotificationDraftAction(type: SummaryType): Promise<{ s
       }
       logger.debug(`[notifications] Weekly target count=${targetShifts.length}, start=${start.toISOString()}, end=${end.toISOString()}`);
 
-      message = '🗓️ <b>ESCALA DA SEMANA (' + format(start, 'dd/MM') + ' a ' + format(end, 'dd/MM') + ')</b>\n\n';
+      message = '🗓️ *ESCALA DA SEMANA (' + format(start, 'dd/MM') + ' a ' + format(end, 'dd/MM') + ')*\n\n';
       targetShifts.forEach(s => {
         const date = format(parseISO(s.date), "dd/MM ' ('eee')'", { locale: ptBR });
-        message += '• ' + date + ': ' + s.startTime + ' - <b>' + getMemberInfo(s.memberIds, members, true) + '</b>\n';
+        message += '• ' + date + ': ' + s.startTime + ' - *' + getMemberInfo(s.memberIds, members, true) + '*\n';
       });
     } 
     else if (type === 'daily') {
@@ -101,11 +94,11 @@ export async function getNotificationDraftAction(type: SummaryType): Promise<{ s
       }
       logger.debug(`[notifications] Daily target count=${targetShifts.length}, date=${now.toISOString()}`);
 
-      message = '🔔 <b>ESCALA DE HOJE (' + format(now, 'dd/MM', { locale: ptBR }) + ')</b>\n\n';
+      message = '🔔 *ESCALA DE HOJE (' + format(now, 'dd/MM', { locale: ptBR }) + ')*\n\n';
       targetShifts.forEach(s => {
         message += '⏰ ' + s.startTime + '\n';
-        message += '📍 ' + escapeHTML(s.title) + '\n';
-        message += '👤 Técnico: <b>' + getMemberInfo(s.memberIds, members, true) + '</b>\n\n';
+        message += '📍 ' + s.title + '\n';
+        message += '👤 Técnico: *' + getMemberInfo(s.memberIds, members, true) + '*\n\n';
       });
     }
 
@@ -123,14 +116,21 @@ export async function getNotificationDraftAction(type: SummaryType): Promise<{ s
 
 async function sendToAll(draft: string, emails: string[], subject: string) {
   try {
-    logger.info(`Starting broadcast to Telegram and ${emails.length} emails. Subject: ${subject}`);
+    logger.info(`Starting broadcast to WhatsApp and ${emails.length} emails. Subject: ${subject}`);
     
-    // 1. Send to Telegram
-    const telRes = await sendTelegramMessageAction(draft);
-    if (!telRes.ok) {
-      logger.error('Telegram broadcast failed', telRes.error);
+    const groupId = process.env.WHATSAPP_GROUP_ID;
+    let whatsRes = { ok: false, error: 'WHATSAPP_GROUP_ID não configurado' };
+
+    // 1. Send to WhatsApp
+    if (groupId) {
+      whatsRes = await sendWhatsAppMessageAction(groupId, draft);
+      if (!whatsRes.ok) {
+        logger.error('WhatsApp broadcast failed', whatsRes.error);
+      } else {
+        logger.info('WhatsApp broadcast successful.');
+      }
     } else {
-      logger.info('Telegram broadcast successful.');
+      logger.warn('Skipping WhatsApp broadcast. WHATSAPP_GROUP_ID not set.');
     }
     
     // 2. Send to Emails
@@ -145,14 +145,14 @@ async function sendToAll(draft: string, emails: string[], subject: string) {
       else logger.error(`Email delivery failed to ${email}`, res.error);
     }
 
-    logger.info(`Broadcast finished. Telegram: ${telRes.ok ? 'OK' : 'FAIL'}, Emails: ${emailSuccess}/${emails.length}`);
+    logger.info(`Broadcast finished. WhatsApp: ${whatsRes.ok ? 'OK' : 'FAIL'}, Emails: ${emailSuccess}/${emails.length}`);
 
     return { 
-      success: telRes.ok, 
-      telegram: telRes.ok,
+      success: whatsRes.ok, 
+      whatsapp: whatsRes.ok,
       emailsSent: emailSuccess,
       totalEmails: emails.length,
-      error: telRes.error 
+      error: whatsRes.error 
     };
   } catch (error) {
     logger.error('Error in sendToAll broadcast', error);

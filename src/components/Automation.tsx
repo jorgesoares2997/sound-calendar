@@ -282,7 +282,7 @@ export function Automation({ toast }: AutomationProps) {
               <div className="flex items-center gap-4">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                 <div>
-                  <p className="font-bold theme-text-primary uppercase tracking-tight text-sm">Telegram Signal Bot</p>
+                  <p className="font-bold theme-text-primary uppercase tracking-tight text-sm">WhatsApp Signal Bot</p>
                   <p className="text-[10px] theme-text-secondary font-medium uppercase tracking-widest mt-0.5">Status: Conectado</p>
                 </div>
               </div>
