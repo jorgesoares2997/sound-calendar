@@ -301,18 +301,18 @@ export function Automation({ toast }: AutomationProps) {
           </div>
         </div>
 
-        <div className="lg:col-span-2 glass-card rounded-[32px] p-8 border border-white/50 shadow-ambient bg-accent-primary text-white">
+        <div className="lg:col-span-2 glass-card rounded-[32px] p-8 theme-border shadow-ambient theme-surface theme-text-primary">
           <h2 className="text-2xl font-bold mb-6 tracking-tight">Protocolo de Gatilho Externo</h2>
-          <div className="bg-white/10 rounded-2xl p-6 space-y-4 text-xs font-medium leading-relaxed backdrop-blur-sm">
+          <div className="bg-slate-100 dark:bg-white/5 rounded-2xl p-6 space-y-4 text-xs font-medium leading-relaxed backdrop-blur-sm">
             <div className="flex flex-col gap-1">
               <span className="text-[9px] uppercase tracking-widest opacity-60 font-bold">Endpoint de API</span>
               <p className="font-bold">secure-relay.sound-calendar.io/v1/trigger</p>
             </div>
-            <div className="h-px bg-white/10 my-4" />
+            <div className="h-px bg-black/10 dark:bg-white/10 my-4" />
             <p className="opacity-80 italic">O motor de harmonia do estúdio permite que você acione lembretes via webhooks externos.</p>
             <div className="pt-4 flex justify-between items-center">
               <span className="text-[9px] font-bold opacity-60 uppercase tracking-widest">Ver. 2.4.0-Stable</span>
-              <button className="px-4 py-2 bg-white text-accent-primary rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-slate-100 transition-all">
+              <button className="px-4 py-2 bg-slate-900 text-white dark:bg-white dark:text-accent-primary rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-slate-800 dark:hover:bg-slate-100 transition-all">
                 Regerar Chave
               </button>
             </div>
