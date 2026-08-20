@@ -42,3 +42,8 @@ next-env.d.ts
 
 # readem
 README_example.md
+
+# html
+qr-prod.html
+qr-response.json
+qr.html
