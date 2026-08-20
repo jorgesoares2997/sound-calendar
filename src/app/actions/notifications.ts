@@ -119,7 +119,7 @@ async function sendToAll(draft: string, emails: string[], subject: string) {
     logger.info(`Starting broadcast to WhatsApp and ${emails.length} emails. Subject: ${subject}`);
     
     const groupId = process.env.WHATSAPP_GROUP_ID;
-    let whatsRes = { ok: false, error: 'WHATSAPP_GROUP_ID não configurado' };
+    let whatsRes: { ok: boolean; error?: string } = { ok: false, error: 'WHATSAPP_GROUP_ID não configurado' };
 
     // 1. Send to WhatsApp
     if (groupId) {
