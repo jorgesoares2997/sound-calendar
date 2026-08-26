@@ -1,6 +1,6 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useStore } from '@/store/useStore';
-import type { Member, Shift } from '@/types';
+import type { Member } from '@/types';
 
 // Mock server actions to prevent real API calls during tests
 jest.mock('@/app/actions/members', () => ({
@@ -80,14 +80,13 @@ describe('useStore hook', () => {
     await waitFor(() => expect(result.current.settings).toBeDefined());
 
     let member: Member;
-    let shift: Shift;
 
     act(() => {
       member = result.current.addMember({ name: 'Carlos', role: 'Video', active: true });
     });
 
     act(() => {
-      shift = result.current.addShift({
+      result.current.addShift({
         date: '2026-01-01',
         title: 'Culto',
         type: 'culto',

@@ -61,6 +61,7 @@ export function useStore() {
   // Shifts persistence
   useEffect(() => {
     if (!hydrated) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setShiftPersistStatus({
       state: 'saving',
       message: 'Sincronizando escalas...',

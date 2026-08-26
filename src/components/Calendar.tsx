@@ -4,7 +4,6 @@ import { useState, useMemo, useEffect } from 'react';
 import type { Shift, Member, AppSettings, ShiftType } from '@/types';
 import { buildReminderMessage, sendTelegramMessage } from '@/utils/telegram';
 import { getEnvConfigStatusAction } from '@/app/actions/telegram';
-import { ShiftCard } from './ShiftCard';
 import { AddShiftModal } from './AddShiftModal';
 
 const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];

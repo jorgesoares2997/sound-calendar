@@ -54,7 +54,7 @@ describe('Telegram Utilities', () => {
     });
 
     it('should handle missing shift title and time gracefully', () => {
-      const emptyShift: Shift = { ...mockShift, title: '', startTime: undefined as any };
+      const emptyShift: Shift = { ...mockShift, title: '', startTime: undefined as unknown as string };
       const template = 'A {shift_title} às {shift_time}';
       const result = expandReminderTemplate(template, mockMember, emptyShift);
       expect(result).toBe('A Escala às '); // Fallback to 'Escala' and empty time

@@ -20,6 +20,7 @@ export function AddShiftModal({ date, members, onClose, onSave, initialData }: A
 
   useEffect(() => {
     if (initialData) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm({
         title: initialData.title,
         type: initialData.type,

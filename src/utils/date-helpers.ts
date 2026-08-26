@@ -1,7 +1,8 @@
 import { 
   startOfMonth, endOfMonth, eachDayOfInterval, 
-  getDay, format, parseISO, isSunday, isWednesday 
+  format, isSunday, isWednesday 
 } from 'date-fns';
+import type { Shift } from '@/types';
 
 export function getMonthDays(year: number, month: number) {
   const start = startOfMonth(new Date(year, month));
@@ -11,7 +12,7 @@ export function getMonthDays(year: number, month: number) {
 
 export function generateSuggestedScales(year: number, month: number) {
   const days = getMonthDays(year, month);
-  const suggestions: any[] = [];
+  const suggestions: Omit<Shift, 'createdAt'>[] = [];
 
   days.forEach((day) => {
     const dateStr = format(day, 'yyyy-MM-dd');

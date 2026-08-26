@@ -1,21 +1,15 @@
 'use client';
 
-import { useState, useEffect, ReactNode } from 'react';
+import { useState, ReactNode } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { Topbar } from '@/components/Topbar';
 import { useAppStore } from '@/components/Providers';
-import { getEnvConfigStatusAction } from '@/app/actions/telegram';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 export function MainLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [envStatus, setEnvStatus] = useState<{ hasToken: boolean; hasChatId: boolean } | null>(null);
   const { settings } = useAppStore();
-
-  useEffect(() => {
-    getEnvConfigStatusAction().then(setEnvStatus);
-  }, []);
 
   return (
     <div className="flex min-h-screen bg-bg-base relative overflow-x-hidden">

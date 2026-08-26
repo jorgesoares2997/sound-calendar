@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { Shift, Member, ShiftType } from '@/types';
-import { SHIFT_TYPES } from './Calendar';
+import type { Shift, Member } from '@/types';
 
 interface ScaleCreatorProps {
   members: Member[];
@@ -16,7 +15,7 @@ export function ScaleCreator({ members, onSave }: ScaleCreatorProps) {
   const [activeTab, setActiveTab] = useState<Tab>('mensal');
   const [saveMode, setSaveMode] = useState<SaveMode>('filled');
   const [month, setMonth] = useState(new Date().getMonth() + 1);
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [year] = useState(new Date().getFullYear());
   const [generatedShifts, setGeneratedShifts] = useState<Omit<Shift, 'id' | 'createdAt'>[]>([]);
 
   const generateMonth = () => {
@@ -61,7 +60,7 @@ export function ScaleCreator({ members, onSave }: ScaleCreatorProps) {
     setGeneratedShifts(updated);
   };
 
-  const updateShiftField = (index: number, field: keyof Omit<Shift, 'id' | 'createdAt'>, value: any) => {
+  const updateShiftField = (index: number, field: keyof Omit<Shift, 'id' | 'createdAt'>, value: string | string[]) => {
     const updated = [...generatedShifts];
     updated[index] = { ...updated[index], [field]: value };
     setGeneratedShifts(updated);

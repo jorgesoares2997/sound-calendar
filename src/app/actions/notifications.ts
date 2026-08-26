@@ -2,7 +2,6 @@
 
 import { getShiftsAction } from './shifts';
 import { getMembersAction } from './members';
-import { sendTelegramMessageAction } from './telegram';
 import { sendEmailAction } from './email';
 import { sendWhatsAppMessageAction } from './whatsapp';
 import { format, parseISO, isSameDay, isWithinInterval, startOfWeek, endOfWeek } from 'date-fns';

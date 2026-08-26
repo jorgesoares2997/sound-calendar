@@ -6,15 +6,15 @@
 const IS_PROD = process.env.NODE_ENV === 'production';
 
 export const logger = {
-  info: (message: string, data?: any) => {
+  info: (message: string, data?: unknown) => {
     console.log(`[INFO] [${new Date().toISOString()}] ${message}`, data || '');
   },
   
-  warn: (message: string, data?: any) => {
+  warn: (message: string, data?: unknown) => {
     console.warn(`[WARN] [${new Date().toISOString()}] ${message}`, data || '');
   },
   
-  error: (message: string, error?: any) => {
+  error: (message: string, error?: unknown) => {
     console.error(`[ERROR] [${new Date().toISOString()}] ${message}`);
     if (error) {
       if (error instanceof Error) {
@@ -27,7 +27,7 @@ export const logger = {
     }
   },
 
-  debug: (message: string, data?: any) => {
+  debug: (message: string, data?: unknown) => {
     if (!IS_PROD) {
       console.log(`[DEBUG] [${new Date().toISOString()}] ${message}`, data || '');
     }
