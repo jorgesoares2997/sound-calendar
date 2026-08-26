@@ -5,6 +5,12 @@
 
 <h1 align="center">Sound Calendar</h1>
 
+<div align="center">
+  <a href="https://github.com/jorgesoares2997/sound-calendar/actions/workflows/ci.yml">
+    <img src="https://github.com/jorgesoares2997/sound-calendar/actions/workflows/ci.yml/badge.svg" alt="CI Pipeline Status" />
+  </a>
+</div>
+
 ## 🎯 O problema que o projeto resolve
 A gestão de escalas para equipes de áudio, som e mídia em eventos ou igrejas frequentemente sofre com falhas de comunicação, esquecimentos e processos manuais exaustivos. O **Sound Calendar** centraliza o controle de membros, turnos e configurações da equipe em uma plataforma única. Seu maior diferencial é a **automação proativa**: o sistema notifica automaticamente os membros da equipe através do Telegram e E-mail, eliminando a necessidade do líder cobrar cada pessoa individualmente e garantindo que ninguém perca seu turno de operação.
 
@@ -59,6 +65,18 @@ A gestão de escalas para equipes de áudio, som e mídia em eventos ou igrejas 
    pnpm dlx supabase db push
    ```
 3. *Opcional*: Migre dados antigos (caso existam) usando `pnpm db:migrate-json`.
+
+### Testes Automatizados (Jest)
+O projeto conta com uma esteira de CI/CD no GitHub Actions que valida automaticamente o código. A infraestrutura de testes unitários foi implementada com Jest e React Testing Library, focada em garantir a estabilidade das lógicas de estado e formatação do Telegram.
+
+Para rodar a suíte de testes localmente:
+```bash
+npm run test
+```
+Para executar em modo contínuo de observação (watch):
+```bash
+npm run test:watch
+```
 
 ### Automação de Notificações
 O sistema possui rotinas configuradas no `vercel.json` para disparar via Vercel Cron:
