@@ -21,9 +21,9 @@ export const viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Sound Calendar // Studio Rhythm Control',
-  description: 'An organic, minimalist tool for technical scheduling. Designed for creative studios and sound engineering teams.',
-  keywords: ['studio planning', 'sound engineering', 'minimalist calendar', 'technical schedule', 'creative automation'],
+  title: 'Sound Calendar',
+  description: 'An organic, minimalist tool for technical scheduling. Designed for sound engineering teams.',
+  keywords: ['sound engineering', 'minimalist calendar', 'technical schedule', 'creative automation'],
   authors: [{ name: 'Sound Calendar Design System' }],
   icons: {
     icon: '/icon.svg',
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     apple: '/icon.svg',
   },
   openGraph: {
-    title: 'Sound Calendar // Studio Rhythm Control',
+    title: 'Sound Calendar',
     description: 'An organic, minimalist tool for technical scheduling.',
     type: 'website',
     locale: 'pt_BR',

@@ -47,7 +47,6 @@ export function Sidebar({ teamName, isOpen, onClose }: SidebarProps) {
           </div>
           <div>
             <h1 className="text-lg font-bold theme-text-primary tracking-tight">Sound Calendar</h1>
-            <p className="text-[10px] font-semibold theme-text-secondary uppercase tracking-widest">Studio_Rhythm</p>
           </div>
         </div>
 
