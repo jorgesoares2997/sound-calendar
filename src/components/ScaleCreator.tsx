@@ -86,9 +86,9 @@ export function ScaleCreator({ members, onSave }: ScaleCreatorProps) {
   };
 
   return (
-    <div className="flex flex-col h-full animate-fade-in pb-20">
+    <div className="flex flex-col h-full animate-fade-in pb-20 w-full min-w-0">
       {/* Header & Tabs */}
-      <div className="px-6 lg:px-12 py-8 space-y-8 flex-shrink-0">
+      <div className="px-4 sm:px-6 lg:px-12 py-6 sm:py-8 space-y-6 sm:space-y-8 flex-shrink-0">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
             <h2 className="text-4xl font-light theme-text-primary tracking-tight">Gerador de Escalas</h2>
@@ -113,13 +113,13 @@ export function ScaleCreator({ members, onSave }: ScaleCreatorProps) {
             </div>
 
             {/* Global Actions */}
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-4">
                {activeTab === 'mensal' ? (
-                 <div className="flex gap-2 theme-surface p-1 rounded-2xl">
+                 <div className="flex gap-2 theme-surface p-1 rounded-2xl w-full sm:w-auto">
                     <select 
                       value={month} 
                       onChange={(e) => setMonth(Number(e.target.value))}
-                      className="bg-transparent border-none text-[10px] font-bold uppercase tracking-widest px-4 py-2 cursor-pointer focus:ring-0"
+                      className="bg-transparent border-none text-[10px] font-bold uppercase tracking-widest px-2 sm:px-4 py-2 cursor-pointer focus:ring-0 flex-1"
                     >
                       {Array.from({ length: 12 }, (_, i) => (
                         <option key={i + 1} value={i + 1}>
@@ -148,10 +148,10 @@ export function ScaleCreator({ members, onSave }: ScaleCreatorProps) {
         </div>
 
         {/* Global Save Toggle */}
-        <div className="flex items-center justify-between py-4 border-y theme-border">
-          <div className="flex items-center gap-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between py-4 border-y theme-border gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
             <span className="text-[10px] font-bold theme-text-muted uppercase tracking-[0.2em]">Modo de Gravação</span>
-            <div className="flex p-1 theme-card-solid rounded-xl border theme-border">
+            <div className="flex p-1 theme-card-solid rounded-xl border theme-border w-fit">
               <button 
                 onClick={() => setSaveMode('all')}
                 className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${saveMode === 'all' ? 'theme-surface shadow-sm text-accent-primary' : 'theme-text-muted'}`}
@@ -170,7 +170,7 @@ export function ScaleCreator({ members, onSave }: ScaleCreatorProps) {
           <button 
             onClick={saveAll}
             disabled={generatedShifts.length === 0}
-            className="px-10 py-3 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl font-bold text-[10px] uppercase tracking-[0.2em] shadow-lift hover:opacity-90 active:scale-95 transition-all disabled:opacity-30 disabled:pointer-events-none"
+            className="w-full md:w-auto px-6 sm:px-10 py-3 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl font-bold text-[10px] uppercase tracking-[0.2em] shadow-lift hover:opacity-90 active:scale-95 transition-all disabled:opacity-30 disabled:pointer-events-none"
           >
             Gravar Lote e Notificar
           </button>
@@ -178,7 +178,7 @@ export function ScaleCreator({ members, onSave }: ScaleCreatorProps) {
       </div>
 
       {/* Vertical Card List */}
-      <div className="flex-1 overflow-y-auto px-6 lg:px-12 space-y-6 pb-20 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-12 space-y-6 pb-20 custom-scrollbar">
         {generatedShifts.length === 0 ? (
           <div className="h-64 flex flex-col items-center justify-center border-2 border-dashed theme-border rounded-[40px] opacity-40">
             <span className="material-symbols-outlined text-4xl mb-2">pending_actions</span>

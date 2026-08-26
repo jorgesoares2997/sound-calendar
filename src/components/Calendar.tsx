@@ -167,10 +167,10 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-12 animate-fade-in">
+    <div className="flex flex-col lg:flex-row gap-12 animate-fade-in w-full min-w-0">
       {/* Calendar Section */}
-      <div className="flex-1">
-        <div className="flex items-center justify-between mb-10">
+      <div className="flex-1 min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-10">
           <div>
             <h2 className="text-4xl font-light theme-text-primary tracking-tight">
               {MONTHS[viewMonth]} {viewYear}
@@ -179,7 +179,7 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
               {shifts.filter(s => s.date.startsWith(`${viewYear}-${String(viewMonth+1).padStart(2, '0')}`)).length} sessões programadas
             </p>
           </div>
-          <div className="flex items-center gap-4 theme-surface p-1 rounded-2xl shadow-sm">
+          <div className="flex items-center gap-4 theme-surface p-1 rounded-2xl shadow-sm self-start sm:self-auto">
             <button onClick={prevMonth} className="p-2 hover:bg-[var(--color-bg-card-hover)] rounded-xl transition-all">
               <span className="material-symbols-outlined">chevron_left</span>
             </button>
@@ -190,9 +190,9 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
           </div>
         </div>
 
-        <div className="glass-card rounded-[32px] overflow-hidden theme-border-strong shadow-ambient">
+        <div className="glass-card rounded-[32px] overflow-hidden theme-border-strong shadow-ambient w-full">
           {/* Grid Container with horizontal scroll on mobile */}
-          <div className="overflow-x-auto custom-scrollbar">
+          <div className="overflow-x-auto custom-scrollbar w-full">
             <div className="min-w-[700px] lg:min-w-0">
               {/* Weekday Labels */}
               <div className="grid grid-cols-7 theme-card-solid border-b theme-border">
@@ -251,11 +251,11 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
       </div>
 
       {/* Side Panel */}
-      <aside className="w-full lg:w-[360px] flex flex-col gap-8">
-        <div className="glass-card p-8 rounded-[32px] theme-border-strong shadow-ambient flex flex-col">
-          <div className="flex items-center justify-between mb-8">
+      <aside className="w-full lg:w-[360px] flex flex-col gap-8 min-w-0">
+        <div className="glass-card p-6 sm:p-8 rounded-[32px] theme-border-strong shadow-ambient flex flex-col">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-8">
             <h3 className="text-xl font-bold theme-text-primary tracking-tight">Próximos Módulos</h3>
-            <span className="text-[10px] font-bold text-accent-primary bg-accent-primary/10 px-3 py-1 rounded-full uppercase tracking-wider">7 Dias</span>
+            <span className="text-[10px] font-bold text-accent-primary bg-accent-primary/10 px-3 py-1 rounded-full uppercase tracking-wider shrink-0">7 Dias</span>
           </div>
 
           <div className="flex flex-col gap-6">
@@ -270,9 +270,9 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
                     <div className="w-12 h-12 rounded-2xl bg-accent-primary/10 flex items-center justify-center text-accent-primary flex-shrink-0">
                       <span className="material-symbols-outlined">{getShiftMeta(shift.type).value === 'culto' ? 'church' : 'graphic_eq'}</span>
                     </div>
-                    <div className="flex-1">
-                      <h4 className="text-sm font-bold theme-text-primary group-hover:text-accent-primary transition-colors uppercase tracking-tight">{shift.title}</h4>
-                      <p className="text-xs theme-text-secondary mt-0.5 font-medium">{shift.startTime} - {shift.date.split('-').reverse().slice(0, 2).join('/')}</p>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-bold theme-text-primary group-hover:text-accent-primary transition-colors uppercase tracking-tight truncate">{shift.title}</h4>
+                      <p className="text-xs theme-text-secondary mt-0.5 font-medium truncate">{shift.startTime} - {shift.date.split('-').reverse().slice(0, 2).join('/')}</p>
                     </div>
                   </div>
                   <div className="flex items-center justify-between pt-3 border-t theme-border">
@@ -305,13 +305,13 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
 
         {/* Selected Date Actions */}
         {selectedDate && (
-          <div className="glass-card p-8 rounded-[32px] theme-border-strong bg-accent-primary text-white shadow-lift animate-slide-up">
+          <div className="glass-card p-6 sm:p-8 rounded-[32px] theme-border-strong bg-accent-primary text-white shadow-lift animate-slide-up">
             <h4 className="text-[10px] font-bold uppercase tracking-widest opacity-70 mb-4">{formatLong(selectedDate)}</h4>
             <div className="flex flex-col gap-4">
               {shiftsForSelected.map(s => (
-                <div key={s.id} className="flex items-center justify-between py-2 border-b border-white/10">
-                  <span className="text-sm font-bold uppercase tracking-tight">{s.title}</span>
-                  <span className="text-xs opacity-70">{s.startTime}</span>
+                <div key={s.id} className="flex items-center justify-between py-2 border-b border-white/10 gap-2">
+                  <span className="text-sm font-bold uppercase tracking-tight truncate">{s.title}</span>
+                  <span className="text-xs opacity-70 shrink-0">{s.startTime}</span>
                 </div>
               ))}
               <button 

@@ -69,11 +69,12 @@ export function Members() {
       </div>
 
       {/* Team Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="flex overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 snap-x snap-mandatory pb-8 pt-2 custom-scrollbar w-full min-w-0">
         {members.map((m) => (
           <MemberCard 
             key={m.id} 
             member={m} 
+            className="flex-shrink-0 w-[80vw] max-w-[320px] md:w-auto snap-center"
             onToggle={(id, changes) => updateMember(id, changes)}
             onEdit={() => openEditModal(m)}
           />
@@ -82,7 +83,7 @@ export function Members() {
         {/* Add Member Placeholder */}
         <div 
           onClick={openAddModal}
-          className="border-2 border-dashed theme-border p-8 rounded-[32px] flex flex-col items-center justify-center text-center group hover:border-accent-primary/40 transition-all cursor-pointer min-h-[320px]"
+          className="border-2 border-dashed theme-border p-8 rounded-[32px] flex flex-col items-center justify-center text-center group hover:border-accent-primary/40 transition-all cursor-pointer min-h-[320px] flex-shrink-0 w-[80vw] max-w-[320px] md:w-auto snap-center"
         >
           <div className="w-16 h-16 rounded-full theme-surface flex items-center justify-center mb-4 group-hover:bg-accent-primary/5 transition-colors">
             <span className="material-symbols-outlined text-slate-400 group-hover:text-accent-primary transition-colors">person_add</span>
@@ -118,16 +119,18 @@ export function Members() {
 
 function MemberCard({ 
   member: m, 
+  className = '',
   onToggle,
   onEdit 
 }: {
   member: Member;
+  className?: string;
   onToggle: (id: string, changes: Partial<Member>) => void;
   onEdit: () => void;
 }) {
   const initials = m.name.split(' ').map((n) => n[0]).slice(0, 2).join('');
   return (
-    <div className={`glass-card p-8 rounded-[32px] transition-all duration-300 hover:-translate-y-1 hover:shadow-lift group flex flex-col ${!m.active ? 'opacity-60 grayscale' : ''}`}>
+    <div className={`glass-card p-8 rounded-[32px] transition-all duration-300 hover:-translate-y-1 hover:shadow-lift group flex flex-col ${!m.active ? 'opacity-60 grayscale' : ''} ${className}`}>
       <div className="flex justify-between items-start mb-6">
         <div className="relative">
           <div 
