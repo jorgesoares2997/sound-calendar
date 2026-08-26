@@ -68,20 +68,20 @@ export function Settings({ settings, onSave, toast }: SettingsProps) {
   };
 
   return (
-    <div className="p-6 lg:p-12 max-w-7xl mx-auto animate-fade-in pb-32">
-      <header className="mb-12">
-        <h2 className="text-5xl font-light theme-text-primary tracking-tight">Ajustes do Sistema</h2>
-        <p className="text-lg theme-text-secondary mt-3 font-medium">Gerencie a identidade do seu espaço de trabalho e as credenciais de integração.</p>
+    <div className="p-4 sm:p-6 lg:p-12 max-w-7xl mx-auto animate-fade-in pb-32 w-full min-w-0">
+      <header className="mb-8 sm:mb-12">
+        <h2 className="text-4xl sm:text-5xl font-light theme-text-primary tracking-tight">Ajustes do Sistema</h2>
+        <p className="text-sm sm:text-lg theme-text-secondary mt-3 font-medium">Gerencie a identidade do seu espaço de trabalho e as credenciais de integração.</p>
       </header>
 
-      <div className="grid grid-cols-12 gap-8">
+      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-8 w-full min-w-0">
         {/* Team Identity Section */}
-        <section className="col-span-12 lg:col-span-7 glass-card rounded-[40px] p-10 shadow-ambient theme-border-strong space-y-8">
+        <section className="lg:col-span-7 glass-card rounded-[32px] sm:rounded-[40px] p-6 sm:p-10 shadow-ambient theme-border-strong space-y-6 sm:space-y-8 w-full min-w-0">
           <div className="flex items-center gap-4 mb-2">
-            <div className="w-10 h-10 rounded-2xl bg-accent-primary/10 flex items-center justify-center text-accent-primary">
+            <div className="w-10 h-10 rounded-2xl bg-accent-primary/10 flex items-center justify-center text-accent-primary shrink-0">
               <span className="material-symbols-outlined">badge</span>
             </div>
-            <h3 className="text-2xl font-bold theme-text-primary tracking-tight">Identidade da Equipe</h3>
+            <h3 className="text-xl sm:text-2xl font-bold theme-text-primary tracking-tight">Identidade da Equipe</h3>
           </div>
           
           <div className="space-y-6">
@@ -120,12 +120,12 @@ export function Settings({ settings, onSave, toast }: SettingsProps) {
         </section>
 
         {/* Telegram Integration Section */}
-        <section className="col-span-12 lg:col-span-5 glass-card rounded-[40px] p-10 shadow-ambient theme-border-strong space-y-8">
+        <section className="lg:col-span-5 glass-card rounded-[32px] sm:rounded-[40px] p-6 sm:p-10 shadow-ambient theme-border-strong space-y-6 sm:space-y-8 w-full min-w-0">
           <div className="flex items-center gap-4 mb-2">
-            <div className="w-10 h-10 rounded-2xl bg-accent-secondary/10 flex items-center justify-center text-accent-secondary">
+            <div className="w-10 h-10 rounded-2xl bg-accent-secondary/10 flex items-center justify-center text-accent-secondary shrink-0">
               <span className="material-symbols-outlined">send</span>
             </div>
-            <h3 className="text-2xl font-bold theme-text-primary tracking-tight">Integração Telegram</h3>
+            <h3 className="text-xl sm:text-2xl font-bold theme-text-primary tracking-tight">Integração Telegram</h3>
           </div>
           
           <div className="space-y-6">
@@ -157,14 +157,14 @@ export function Settings({ settings, onSave, toast }: SettingsProps) {
         </section>
 
         {/* Message Template Section */}
-        <section className="col-span-12 glass-card rounded-[40px] p-10 shadow-ambient theme-border-strong">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            <div className="space-y-8">
+        <section className="lg:col-span-12 glass-card rounded-[32px] sm:rounded-[40px] p-6 sm:p-10 shadow-ambient theme-border-strong w-full min-w-0">
+          <div className="flex flex-col lg:grid lg:grid-cols-2 gap-8 sm:gap-12 min-w-0">
+            <div className="space-y-6 sm:space-y-8 min-w-0 w-full">
               <div className="flex items-center gap-4 mb-2">
-                <div className="w-10 h-10 rounded-2xl bg-accent-tertiary/10 flex items-center justify-center text-accent-tertiary">
+                <div className="w-10 h-10 rounded-2xl bg-accent-tertiary/10 flex items-center justify-center text-accent-tertiary shrink-0">
                   <span className="material-symbols-outlined">subject</span>
                 </div>
-                <h3 className="text-2xl font-bold theme-text-primary tracking-tight">Template de Mensagem</h3>
+                <h3 className="text-xl sm:text-2xl font-bold theme-text-primary tracking-tight">Template de Mensagem</h3>
               </div>
               <p className="theme-text-secondary font-medium">Personalize a estrutura das notificações automáticas usando suporte a Markdown.</p>
               
@@ -191,10 +191,10 @@ export function Settings({ settings, onSave, toast }: SettingsProps) {
               </div>
             </div>
 
-            <div className="flex flex-col">
+            <div className="flex flex-col min-w-0 w-full">
               <label className="text-[10px] font-bold theme-text-muted uppercase tracking-widest px-1 mb-4">Pré-visualização (Telegram)</label>
-              <div className="flex-1 rounded-[32px] p-6 md:p-8 relative overflow-hidden shadow-ambient border theme-border-strong theme-card-solid min-h-[280px]">
-                <div className="flex items-center gap-3 mb-5 pb-4 border-b theme-border">
+              <div className="flex-1 rounded-[32px] p-5 md:p-8 relative overflow-hidden shadow-ambient border theme-border-strong theme-card-solid min-h-[280px] w-full min-w-0">
+                <div className="flex items-center gap-3 mb-5 pb-4 border-b theme-border min-w-0 w-full">
                   <div className="w-9 h-9 rounded-full bg-[#0088cc] flex items-center justify-center text-white shadow-md shrink-0">
                     <span className="material-symbols-outlined text-[18px]">send</span>
                   </div>
@@ -207,14 +207,14 @@ export function Settings({ settings, onSave, toast }: SettingsProps) {
                   <span className="text-[10px] theme-text-muted font-medium tabular-nums shrink-0">09:30</span>
                 </div>
                 <div
-                  className="rounded-2xl border theme-border p-5 md:p-6 bg-[var(--color-bg-base)] text-sm theme-text-primary leading-relaxed shadow-inner"
+                  className="rounded-2xl border theme-border p-4 md:p-6 bg-[var(--color-bg-base)] text-sm theme-text-primary leading-relaxed shadow-inner min-w-0 break-words w-full"
                 >
                   <div
-                    className="[&_strong]:font-bold [&_strong]:text-accent-primary"
+                    className="[&_strong]:font-bold [&_strong]:text-accent-primary whitespace-pre-wrap break-words"
                     dangerouslySetInnerHTML={{ __html: previewHtml }}
                   />
                 </div>
-                <p className="text-[10px] theme-text-muted mt-4 italic border-t theme-border pt-4">
+                <p className="text-[10px] theme-text-muted mt-4 italic border-t theme-border pt-4 break-words">
                   Exemplo com {PREVIEW_MEMBER.name} e {PREVIEW_SHIFT.title} ({PREVIEW_SHIFT.date}, {PREVIEW_SHIFT.startTime}).
                 </p>
               </div>
@@ -223,21 +223,21 @@ export function Settings({ settings, onSave, toast }: SettingsProps) {
         </section>
 
         {/* System Health Section */}
-        <section className="col-span-12 glass-card rounded-[40px] p-10 shadow-ambient theme-border-strong mb-12">
-          <div className="flex items-center justify-between mb-10">
+        <section className="lg:col-span-12 glass-card rounded-[32px] sm:rounded-[40px] p-6 sm:p-10 shadow-ambient theme-border-strong mb-12 w-full min-w-0">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 sm:mb-10 min-w-0">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-2xl bg-accent-primary/10 flex items-center justify-center text-accent-primary">
+              <div className="w-10 h-10 rounded-2xl bg-accent-primary/10 flex items-center justify-center text-accent-primary shrink-0">
                 <span className="material-symbols-outlined">monitor_heart</span>
               </div>
-              <h3 className="text-2xl font-bold theme-text-primary tracking-tight">Status do Sistema</h3>
+              <h3 className="text-xl sm:text-2xl font-bold theme-text-primary tracking-tight">Status do Sistema</h3>
             </div>
-            <div className="flex items-center gap-2 px-4 py-1.5 bg-green-500/10 text-green-600 rounded-full border border-green-500/20">
+            <div className="flex items-center gap-2 px-4 py-1.5 bg-green-500/10 text-green-600 rounded-full border border-green-500/20 w-fit">
               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
               <span className="text-[10px] font-bold uppercase tracking-widest">Sistemas Operacionais</span>
             </div>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
             {[
               { label: 'Latência API', val: '24ms' },
               { label: 'Status Worker', val: 'Ativo' },
@@ -254,12 +254,12 @@ export function Settings({ settings, onSave, toast }: SettingsProps) {
       </div>
 
       {/* Footer Actions */}
-      <footer className="fixed bottom-10 left-[320px] right-12 flex justify-end gap-4 z-40">
+      <footer className="fixed bottom-6 lg:bottom-10 left-6 lg:left-[320px] right-6 lg:right-12 flex justify-center lg:justify-end gap-4 z-40 pointer-events-none">
         <button 
           onClick={() => {
             toast.success('Configurações do workspace salvas com sucesso');
           }}
-          className="px-12 py-4 bg-accent-primary text-white rounded-[20px] font-bold text-xs uppercase tracking-[0.2em] shadow-lift hover:opacity-90 active:scale-95 transition-all flex items-center gap-3"
+          className="w-full sm:w-auto px-6 sm:px-12 py-4 bg-accent-primary text-white rounded-[20px] font-bold text-xs uppercase tracking-[0.2em] shadow-lift hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-3 pointer-events-auto"
         >
           <span className="material-symbols-outlined text-sm">save</span>
           Gravar Workspace
