@@ -13,10 +13,17 @@ type MemberRow = {
   phone: string;
   color: string;
   active: boolean;
-  access_level: string;
 };
 
 function toMember(row: MemberRow): Member {
+  const roleLower = (row.role || '').toLowerCase();
+  let level: 'admin' | 'senior' | 'basic' = 'basic';
+  if (roleLower.includes('líder') || roleLower.includes('lider')) {
+    level = 'admin';
+  } else if (roleLower.includes('senior')) {
+    level = 'senior';
+  }
+
   return {
     id: row.id,
     name: row.name,
@@ -26,7 +33,7 @@ function toMember(row: MemberRow): Member {
     phone: row.phone,
     color: row.color,
     active: row.active,
-    accessLevel: (row.access_level as 'admin' | 'senior' | 'basic') || 'basic',
+    accessLevel: level,
   };
 }
 
@@ -40,7 +47,6 @@ function toRow(member: Member): MemberRow {
     phone: member.phone,
     color: member.color,
     active: member.active,
-    access_level: member.accessLevel || 'basic',
   };
 }
 
