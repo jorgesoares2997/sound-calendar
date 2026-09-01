@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { Menu } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useAppStore } from '@/components/Providers';
+import { useAuthStore } from '@/store/authStore';
 import { useState, useRef, useEffect } from 'react';
 
 const PAGE_TITLES: Record<string, string> = {
@@ -21,9 +22,15 @@ interface TopbarProps {
 export function Topbar({ onOpenSidebar }: TopbarProps) {
   const pathname = usePathname();
   const title = PAGE_TITLES[pathname] || 'Sound Calendar';
-  const { members, currentUser, setCurrentUser } = useAppStore();
+  const { members } = useAppStore();
+  const { currentUser, setCurrentUser } = useAuthStore();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -36,7 +43,13 @@ export function Topbar({ onOpenSidebar }: TopbarProps) {
   }, []);
 
   return (
-    <header className="w-full h-16 sticky top-0 backdrop-blur-xl border-b theme-border flex justify-between items-center px-6 lg:px-12 z-40 shadow-sm theme-card-solid">
+    <header 
+      className="w-full h-16 sticky top-0 backdrop-blur-xl border-b theme-border flex justify-between items-center px-6 lg:px-12 z-40 shadow-sm transition-colors duration-300"
+      style={{
+        backgroundColor: (mounted && currentUser) ? `${currentUser.color}08` : 'var(--color-bg-card-solid)',
+        borderBottomColor: (mounted && currentUser) ? `${currentUser.color}30` : undefined,
+      }}
+    >
       <div className="flex items-center gap-4 lg:gap-6">
         <button
           id="btn-menu"
@@ -57,26 +70,35 @@ export function Topbar({ onOpenSidebar }: TopbarProps) {
       </div>
 
       <div className="flex items-center gap-4">
-        {currentUser && (
+        {mounted && (
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
               className="flex items-center gap-2 theme-surface p-1.5 px-3 rounded-full border theme-border hover:bg-[var(--color-bg-surface)] transition-all"
             >
-              <div
-                className="w-4 h-4 rounded-full"
-                style={{ backgroundColor: currentUser.color }}
-              />
-              <span className="text-sm font-medium theme-text-primary hidden sm:inline-block">
-                {currentUser.name.split(' ')[0]}
-              </span>
-              <span className="text-xs theme-text-muted hidden sm:inline-block border-l theme-border pl-2">
-                {currentUser.accessLevel || 'basic'}
-              </span>
+              {currentUser ? (
+                <>
+                  <div
+                    className="w-4 h-4 rounded-full"
+                    style={{ backgroundColor: currentUser.color }}
+                  />
+                  <span className="text-sm font-medium theme-text-primary hidden sm:inline-block">
+                    {currentUser.name.split(' ')[0]}
+                  </span>
+                  <span className="text-xs theme-text-muted hidden sm:inline-block border-l theme-border pl-2">
+                    {currentUser.role || 'Sem Função'}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <div className="w-4 h-4 rounded-full bg-slate-300 dark:bg-slate-700" />
+                  <span className="text-sm font-medium theme-text-primary hidden sm:inline-block">Selecionar Perfil</span>
+                </>
+              )}
             </button>
 
             {dropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-800 rounded-xl shadow-lg border theme-border overflow-hidden animate-fade-in z-50">
+              <div className="absolute right-0 mt-2 w-48 theme-card-solid backdrop-blur-md rounded-xl shadow-lg border theme-border overflow-hidden animate-fade-in z-50">
                 <div className="p-2 space-y-1">
                   {members.filter(m => m.active).map(member => (
                     <button
@@ -86,7 +108,7 @@ export function Topbar({ onOpenSidebar }: TopbarProps) {
                         setDropdownOpen(false);
                       }}
                       className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left text-sm transition-all
-                        ${currentUser.id === member.id ? 'bg-accent-primary/10 text-accent-primary font-medium' : 'theme-text-primary hover:bg-[var(--color-bg-surface)]'}
+                        ${currentUser?.id === member.id ? 'bg-accent-primary/10 text-accent-primary font-medium' : 'theme-text-primary hover:bg-[var(--color-bg-surface)]'}
                       `}
                     >
                       <div

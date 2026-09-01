@@ -1,15 +1,30 @@
 'use client';
 
-import { useState, ReactNode } from 'react';
+import { useState, ReactNode, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { Sidebar } from '@/components/Sidebar';
 import { Topbar } from '@/components/Topbar';
 import { useAppStore } from '@/components/Providers';
+import { usePermissions } from '@/store/authStore';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 export function MainLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { settings } = useAppStore();
+  
+  const pathname = usePathname();
+  const { canManageSystem, canCreateShifts } = usePermissions();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDenied = mounted && (
+    (pathname === '/gerar-escalas' && !canCreateShifts) ||
+    (['/equipe', '/automacao', '/configuracoes'].includes(pathname) && !canManageSystem)
+  );
 
   return (
     <div className="flex min-h-screen bg-bg-base relative overflow-x-hidden">
@@ -32,7 +47,15 @@ export function MainLayout({ children }: { children: ReactNode }) {
         {/* Page content */}
         <div className="flex-1 min-w-0 p-4 sm:p-6 lg:p-10 relative z-10 w-full">
           <div className="max-w-[1600px] mx-auto w-full min-w-0">
-            {children}
+            {isDenied ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-in">
+                <span className="material-symbols-outlined text-6xl text-red-500 mb-4 opacity-80">block</span>
+                <h2 className="text-2xl font-bold theme-text-primary mb-2">Acesso Restrito</h2>
+                <p className="theme-text-secondary max-w-md">Seu perfil não possui as permissões necessárias para acessar esta página.</p>
+              </div>
+            ) : (
+              children
+            )}
           </div>
         </div>
       </main>

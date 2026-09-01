@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import type { Shift, Member, AppSettings, ShiftType } from '@/types';
 import { getEnvConfigStatusAction } from '@/app/actions/telegram';
 import { useAppStore } from '@/components/Providers';
+import { usePermissions } from '@/store/authStore';
 import { AddShiftModal } from './AddShiftModal';
 
 const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -58,7 +59,7 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
   const [showAllShiftsModal, setShowAllShiftsModal] = useState(false);
   const [showDeleteShiftsModal, setShowDeleteShiftsModal] = useState(false);
   const [selectedShiftIdsToDelete, setSelectedShiftIdsToDelete] = useState<string[]>([]);
-  const { canCreateShifts, canDeleteShifts } = useAppStore();
+  const { canCreateShifts, canDeleteShifts } = usePermissions();
 
   useEffect(() => {
     getEnvConfigStatusAction().then(setEnvStatus);

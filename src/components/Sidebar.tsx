@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAppStore } from '@/components/Providers';
+import { usePermissions } from '@/store/authStore';
 
 const NAV_ITEMS = [
   { id: 'calendar', label: 'Calendário', href: '/', icon: 'calendar_today' },
@@ -20,7 +20,7 @@ interface SidebarProps {
 
 export function Sidebar({ teamName, isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
-  const { canManageSystem, canCreateShifts } = useAppStore();
+  const { canManageSystem, canCreateShifts } = usePermissions();
 
   const visibleNavItems = NAV_ITEMS.filter(item => {
     if (['settings', 'members', 'automation'].includes(item.id)) return canManageSystem;
