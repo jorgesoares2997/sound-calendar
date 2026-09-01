@@ -3,6 +3,8 @@
 import { usePathname } from 'next/navigation';
 import { Menu } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { useAppStore } from '@/components/Providers';
+import { useState, useRef, useEffect } from 'react';
 
 const PAGE_TITLES: Record<string, string> = {
   '/': 'Calendário de Escalas',
@@ -19,6 +21,19 @@ interface TopbarProps {
 export function Topbar({ onOpenSidebar }: TopbarProps) {
   const pathname = usePathname();
   const title = PAGE_TITLES[pathname] || 'Sound Calendar';
+  const { members, currentUser, setCurrentUser } = useAppStore();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <header className="w-full h-16 sticky top-0 backdrop-blur-xl border-b theme-border flex justify-between items-center px-6 lg:px-12 z-40 shadow-sm theme-card-solid">
@@ -42,6 +57,54 @@ export function Topbar({ onOpenSidebar }: TopbarProps) {
       </div>
 
       <div className="flex items-center gap-4">
+        {currentUser && (
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="flex items-center gap-2 theme-surface p-1.5 px-3 rounded-full border theme-border hover:bg-[var(--color-bg-surface)] transition-all"
+            >
+              <div
+                className="w-4 h-4 rounded-full"
+                style={{ backgroundColor: currentUser.color }}
+              />
+              <span className="text-sm font-medium theme-text-primary hidden sm:inline-block">
+                {currentUser.name.split(' ')[0]}
+              </span>
+              <span className="text-xs theme-text-muted hidden sm:inline-block border-l theme-border pl-2">
+                {currentUser.accessLevel || 'basic'}
+              </span>
+            </button>
+
+            {dropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-800 rounded-xl shadow-lg border theme-border overflow-hidden animate-fade-in z-50">
+                <div className="p-2 space-y-1">
+                  {members.filter(m => m.active).map(member => (
+                    <button
+                      key={member.id}
+                      onClick={() => {
+                        setCurrentUser(member);
+                        setDropdownOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left text-sm transition-all
+                        ${currentUser.id === member.id ? 'bg-accent-primary/10 text-accent-primary font-medium' : 'theme-text-primary hover:bg-[var(--color-bg-surface)]'}
+                      `}
+                    >
+                      <div
+                        className="w-3 h-3 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: member.color }}
+                      />
+                      <div className="truncate">
+                        <div>{member.name}</div>
+                        <div className="text-xs opacity-70">{member.accessLevel || 'basic'}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="flex items-center gap-3 theme-surface p-1 rounded-full border theme-border">
           <ThemeToggle />
         </div>

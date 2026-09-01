@@ -2,8 +2,8 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import type { Shift, Member, AppSettings, ShiftType } from '@/types';
-import { buildReminderMessage, sendTelegramMessage } from '@/utils/telegram';
 import { getEnvConfigStatusAction } from '@/app/actions/telegram';
+import { useAppStore } from '@/components/Providers';
 import { AddShiftModal } from './AddShiftModal';
 
 const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -58,6 +58,7 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
   const [showAllShiftsModal, setShowAllShiftsModal] = useState(false);
   const [showDeleteShiftsModal, setShowDeleteShiftsModal] = useState(false);
   const [selectedShiftIdsToDelete, setSelectedShiftIdsToDelete] = useState<string[]>([]);
+  const { canCreateShifts, canDeleteShifts } = useAppStore();
 
   useEffect(() => {
     getEnvConfigStatusAction().then(setEnvStatus);
@@ -294,12 +295,14 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
           >
             Ver Tudo
           </button>
-          <button
-            onClick={() => setShowDeleteShiftsModal(true)}
-            className="w-full mt-3 py-3 text-xs font-bold text-red-500 border border-red-200 dark:border-red-900/40 rounded-xl hover:bg-red-50/70 dark:hover:bg-red-900/20 transition-colors uppercase tracking-widest"
-          >
-            Apagar Escalas
-          </button>
+          {canDeleteShifts && (
+            <button
+              onClick={() => setShowDeleteShiftsModal(true)}
+              className="w-full mt-3 py-3 text-xs font-bold text-red-500 border border-red-200 dark:border-red-900/40 rounded-xl hover:bg-red-50/70 dark:hover:bg-red-900/20 transition-colors uppercase tracking-widest"
+            >
+              Apagar Escalas
+            </button>
+          )}
         </div>
 
         {/* Selected Date Actions */}
@@ -313,12 +316,14 @@ export function Calendar({ shifts, members, settings, onAddShift, onDeleteShift,
                   <span className="text-xs opacity-70 shrink-0">{s.startTime}</span>
                 </div>
               ))}
-              <button 
-                onClick={() => setShowModal(true)}
-                className="w-full mt-4 bg-white text-accent-primary py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-slate-50 active:scale-95 transition-all shadow-md"
-              >
-                + Nova Entrada
-              </button>
+              {canCreateShifts && (
+                <button 
+                  onClick={() => setShowModal(true)}
+                  className="w-full mt-4 bg-white text-accent-primary py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-slate-50 active:scale-95 transition-all shadow-md"
+                >
+                  + Nova Entrada
+                </button>
+              )}
             </div>
           </div>
         )}

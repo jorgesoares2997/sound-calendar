@@ -9,6 +9,7 @@ export interface Member {
   phone: string;
   color: string;
   active: boolean;
+  accessLevel?: 'admin' | 'senior' | 'basic';
 }
 
 export interface Shift {

@@ -34,6 +34,34 @@ describe('useStore hook', () => {
     expect(result.current.members).toEqual([]);
     expect(result.current.shifts).toEqual([]);
     expect(typeof result.current.settings.teamName).toBe('string');
+    expect(result.current.currentUser).toBeNull();
+    expect(result.current.canManageSystem).toBe(false);
+  });
+
+  it('should handle permissions based on currentUser', async () => {
+    const { result } = renderHook(() => useStore());
+    await waitFor(() => expect(result.current.settings).toBeDefined());
+
+    act(() => {
+      result.current.setCurrentUser({ id: '1', name: 'Leticia', accessLevel: 'basic', role: 'Tecnica', telegramId: '', email: '', phone: '', color: '', active: true });
+    });
+    expect(result.current.canManageSystem).toBe(false);
+    expect(result.current.canCreateShifts).toBe(false);
+    expect(result.current.canDeleteShifts).toBe(false);
+
+    act(() => {
+      result.current.setCurrentUser({ id: '2', name: 'Lais', accessLevel: 'senior', role: 'Senior', telegramId: '', email: '', phone: '', color: '', active: true });
+    });
+    expect(result.current.canManageSystem).toBe(false);
+    expect(result.current.canCreateShifts).toBe(true);
+    expect(result.current.canDeleteShifts).toBe(true);
+
+    act(() => {
+      result.current.setCurrentUser({ id: '3', name: 'Jorge', accessLevel: 'admin', role: 'Lider', telegramId: '', email: '', phone: '', color: '', active: true });
+    });
+    expect(result.current.canManageSystem).toBe(true);
+    expect(result.current.canCreateShifts).toBe(true);
+    expect(result.current.canDeleteShifts).toBe(true);
   });
 
   it('should add a new member and generate an ID', async () => {

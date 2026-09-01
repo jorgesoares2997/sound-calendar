@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAppStore } from '@/components/Providers';
 
 const NAV_ITEMS = [
   { id: 'calendar', label: 'Calendário', href: '/', icon: 'calendar_today' },
@@ -19,6 +20,13 @@ interface SidebarProps {
 
 export function Sidebar({ teamName, isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const { canManageSystem, canCreateShifts } = useAppStore();
+
+  const visibleNavItems = NAV_ITEMS.filter(item => {
+    if (['settings', 'members', 'automation'].includes(item.id)) return canManageSystem;
+    if (item.id === 'scale-creator') return canCreateShifts;
+    return true;
+  });
 
   return (
     <>
@@ -51,17 +59,19 @@ export function Sidebar({ teamName, isOpen, onClose }: SidebarProps) {
         </div>
 
         {/* Action Button */}
-        <Link 
-          href="/gerar-escalas"
-          className="w-full bg-accent-primary text-white py-3 px-4 rounded-xl font-medium shadow-sm hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 group"
-        >
-          <span className="material-symbols-outlined text-sm transition-transform group-hover:rotate-90">add</span>
-          Nova Escala
-        </Link>
+        {canCreateShifts && (
+          <Link 
+            href="/gerar-escalas"
+            className="w-full bg-accent-primary text-white py-3 px-4 rounded-xl font-medium shadow-sm hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 group"
+          >
+            <span className="material-symbols-outlined text-sm transition-transform group-hover:rotate-90">add</span>
+            Nova Escala
+          </Link>
+        )}
         
         {/* Navigation */}
         <nav className="flex-1 space-y-1">
-          {NAV_ITEMS.map((item) => {
+          {visibleNavItems.map((item) => {
             const isActive = pathname === item.href;
             return (
               <Link

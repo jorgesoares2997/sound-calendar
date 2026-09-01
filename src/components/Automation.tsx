@@ -102,11 +102,12 @@ export function Automation({ toast }: AutomationProps) {
 
   const handleManualSend = async (
     type: SummaryType,
-    action: () => Promise<{ success?: boolean; error?: string; emailsSent?: number }>,
+    action: (customMessage?: string) => Promise<{ success?: boolean; error?: string; emailsSent?: number }>,
+    customMessage?: string
   ) => {
     setLoading(`send-${type}`);
     console.info('[Automation] Sending notification', { type });
-    const result = await action();
+    const result = await action(customMessage);
     setLoading(null);
 
     if (result.success) {
@@ -355,17 +356,35 @@ export function Automation({ toast }: AutomationProps) {
                   Notificação {preview.type}
                 </h3>
               </div>
-              <button
-                onClick={() => setPreview(null)}
-                className="px-3 py-2 text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 uppercase tracking-wider"
-              >
-                Fechar
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPreview(null)}
+                  className="px-3 py-2 text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 uppercase tracking-wider"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    const action = 
+                      preview.type === 'daily' ? sendDailySummaryAction :
+                      preview.type === 'weekly' ? sendWeeklySummaryAction :
+                      sendMonthlySummaryAction;
+                    handleManualSend(preview.type, action, preview.content);
+                    setPreview(null);
+                  }}
+                  disabled={loading !== null}
+                  className="px-4 py-2 text-xs font-bold rounded-xl bg-accent-primary text-white uppercase tracking-wider hover:opacity-90 disabled:opacity-50 transition-opacity"
+                >
+                  {loading ? 'Enviando...' : 'Enviar esta Versão'}
+                </button>
+              </div>
             </div>
 
-            <pre className="theme-card-solid border theme-border rounded-2xl p-4 text-xs whitespace-pre-wrap max-h-[55vh] overflow-auto theme-text-secondary">
-              {preview.content}
-            </pre>
+            <textarea
+              value={preview.content}
+              onChange={(e) => setPreview({ ...preview, content: e.target.value })}
+              className="w-full theme-card-solid border theme-border rounded-2xl p-4 text-xs h-64 resize-y theme-text-secondary focus:border-accent-primary focus:outline-none focus:ring-1 focus:ring-accent-primary/50"
+            />
           </div>
         </div>
       )}

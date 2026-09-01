@@ -159,20 +159,20 @@ async function sendToAll(draft: string, emails: string[], subject: string) {
   }
 }
 
-export async function sendMonthlySummaryAction() {
+export async function sendMonthlySummaryAction(customMessage?: string) {
   const res = await getNotificationDraftAction('monthly');
   if (!res.success || !res.draft || !res.emails) return res;
-  return await sendToAll(res.draft, res.emails, '📅 Escala Mensal de Som');
+  return await sendToAll(customMessage || res.draft, res.emails, '📅 Escala Mensal de Som');
 }
 
-export async function sendWeeklySummaryAction() {
+export async function sendWeeklySummaryAction(customMessage?: string) {
   const res = await getNotificationDraftAction('weekly');
   if (!res.success || !res.draft || !res.emails) return res;
-  return await sendToAll(res.draft, res.emails, '🗓️ Escala da Semana (Som)');
+  return await sendToAll(customMessage || res.draft, res.emails, '🗓️ Escala da Semana (Som)');
 }
 
-export async function sendDailySummaryAction() {
+export async function sendDailySummaryAction(customMessage?: string) {
   const res = await getNotificationDraftAction('daily');
   if (!res.success || !res.draft || !res.emails) return res;
-  return await sendToAll(res.draft, res.emails, '🔔 Lembrete: Sua Escala de Som HOJE');
+  return await sendToAll(customMessage || res.draft, res.emails, '🔔 Lembrete: Sua Escala de Som HOJE');
 }

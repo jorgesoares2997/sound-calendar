@@ -13,6 +13,7 @@ type MemberRow = {
   phone: string;
   color: string;
   active: boolean;
+  access_level: string;
 };
 
 function toMember(row: MemberRow): Member {
@@ -25,6 +26,7 @@ function toMember(row: MemberRow): Member {
     phone: row.phone,
     color: row.color,
     active: row.active,
+    accessLevel: (row.access_level as 'admin' | 'senior' | 'basic') || 'basic',
   };
 }
 
@@ -38,6 +40,7 @@ function toRow(member: Member): MemberRow {
     phone: member.phone,
     color: member.color,
     active: member.active,
+    access_level: member.accessLevel || 'basic',
   };
 }
 

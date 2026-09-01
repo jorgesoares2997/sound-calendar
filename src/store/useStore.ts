@@ -30,6 +30,7 @@ export function useStore() {
   const [members, setMembersState] = useState<Member[]>(DEFAULT_MEMBERS);
   const [shifts, setShiftsState] = useState<Shift[]>([]);
   const [settings, setSettingsState] = useState<AppSettings>(DEFAULT_SETTINGS);
+  const [currentUser, setCurrentUser] = useState<Member | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [shiftPersistStatus, setShiftPersistStatus] = useState<PersistStatus>({
     state: 'idle',
@@ -47,6 +48,12 @@ export function useStore() {
         setMembersState(loadedMembers);
         setShiftsState(loadedShifts);
         setSettingsState(loadedSettings);
+        
+        setCurrentUser(prev => {
+          if (prev) return prev;
+          return loadedMembers.find(m => m.accessLevel === 'admin') || loadedMembers[0] || null;
+        });
+
         setHydrated(true);
       })
       .catch((error) => {
@@ -242,10 +249,19 @@ export function useStore() {
     }
   }, [setShifts]);
 
+  const canManageSystem = currentUser?.accessLevel === 'admin';
+  const canCreateShifts = currentUser?.accessLevel === 'admin' || currentUser?.accessLevel === 'senior';
+  const canDeleteShifts = currentUser?.accessLevel === 'admin' || currentUser?.accessLevel === 'senior';
+
   return {
     members,
     shifts,
     settings,
+    currentUser,
+    setCurrentUser,
+    canManageSystem,
+    canCreateShifts,
+    canDeleteShifts,
     shiftPersistStatus,
     setSettings,
     addMember,
