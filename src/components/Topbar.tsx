@@ -100,7 +100,7 @@ export function Topbar({ onOpenSidebar }: TopbarProps) {
             {dropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 theme-card-solid backdrop-blur-md rounded-xl shadow-lg border theme-border overflow-hidden animate-fade-in z-50">
                 <div className="p-2 space-y-1">
-                  {members.filter(m => m.active).map(member => (
+                  {members.filter(m => m.active && m.platformAccess !== false).map(member => (
                     <button
                       key={member.id}
                       onClick={() => {

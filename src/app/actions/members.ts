@@ -16,7 +16,11 @@ type MemberRow = {
 };
 
 function toMember(row: MemberRow): Member {
-  const roleLower = (row.role || '').toLowerCase();
+  const rawRole = row.role || '';
+  const platformAccess = !rawRole.includes('[NO_ACCESS]');
+  const cleanRole = rawRole.replace('[NO_ACCESS]', '').trim();
+  
+  const roleLower = cleanRole.toLowerCase();
   let level: 'admin' | 'senior' | 'basic' = 'basic';
   if (roleLower.includes('líder') || roleLower.includes('lider')) {
     level = 'admin';
@@ -27,21 +31,25 @@ function toMember(row: MemberRow): Member {
   return {
     id: row.id,
     name: row.name,
-    role: row.role,
+    role: cleanRole,
     telegramId: row.telegram_id,
     email: row.email,
     phone: row.phone,
     color: row.color,
     active: row.active,
+    platformAccess,
     accessLevel: level,
   };
 }
 
-function toRow(member: Member): MemberRow {
+function toMemberRow(member: Member): Partial<MemberRow> {
+  const roleSuffix = member.platformAccess === false ? ' [NO_ACCESS]' : '';
+  const finalRole = `${member.role || ''}${roleSuffix}`.trim();
+
   return {
     id: member.id,
     name: member.name,
-    role: member.role,
+    role: finalRole,
     telegram_id: member.telegramId,
     email: member.email,
     phone: member.phone,
@@ -71,7 +79,7 @@ export async function saveMembersAction(members: Member[]): Promise<{ success: b
   try {
     const supabase = getSupabaseAdminClient();
     const uniqueMembers = Array.from(new Map(members.map((member) => [member.id, member])).values());
-    const rows = uniqueMembers.map(toRow);
+    const rows = uniqueMembers.map(toMemberRow);
 
     if (rows.length > 0) {
       const { error } = await supabase.from('members').upsert(rows, { onConflict: 'id' });

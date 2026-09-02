@@ -9,6 +9,7 @@ export interface Member {
   phone: string;
   color: string;
   active: boolean;
+  platformAccess: boolean;
   accessLevel?: 'admin' | 'senior' | 'basic';
 }
 

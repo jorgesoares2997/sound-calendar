@@ -3,6 +3,10 @@
 import { useMemo, useRef } from 'react';
 import type { AppSettings, Member, Shift } from '@/types';
 import { expandReminderTemplate, formatReminderPreviewHtml } from '@/utils/telegram';
+import { useAppStore } from '@/components/Providers';
+import { useAuthStore } from '@/store/authStore';
+
+const ROLES = ['Líder de Som', 'Técnico Senior', 'Técnico Pleno', 'Técnico Junior', 'Estagiário'];
 
 const PREVIEW_MEMBER: Member = {
   id: 'preview-member',
@@ -37,6 +41,9 @@ interface SettingsProps {
 
 export function Settings({ settings, onSave, toast }: SettingsProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { members, updateMember } = useAppStore();
+  const currentUser = useAuthStore(state => state.currentUser);
+  const isAdmin = currentUser?.accessLevel === 'admin';
 
   const handleUpdate = (key: keyof AppSettings, val: string | boolean | number) => {
     onSave((prev) => ({ ...prev, [key]: val }));
@@ -221,6 +228,60 @@ export function Settings({ settings, onSave, toast }: SettingsProps) {
             </div>
           </div>
         </section>
+
+        {/* Roles Management Section (Admin Only) */}
+        {isAdmin && (
+          <section className="lg:col-span-12 glass-card rounded-[32px] sm:rounded-[40px] p-6 sm:p-10 shadow-ambient theme-border-strong w-full min-w-0">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-10 h-10 rounded-2xl bg-accent-primary/10 flex items-center justify-center text-accent-primary shrink-0">
+                <span className="material-symbols-outlined">admin_panel_settings</span>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-bold theme-text-primary tracking-tight">Gestão de Acessos</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {members.map(member => (
+                <div key={member.id} className="p-4 theme-card-solid rounded-[24px] border theme-border flex flex-col gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full" style={{ backgroundColor: member.color }} />
+                    <div className="flex flex-col flex-1 min-w-0">
+                      <span className="text-sm font-bold theme-text-primary truncate">{member.name}</span>
+                      <span className="text-[10px] theme-text-muted font-medium truncate">{member.email || 'Sem e-mail'}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] font-bold theme-text-muted uppercase tracking-widest px-1">Papel / Função</label>
+                    <select
+                      className="organic-input w-full text-sm appearance-none"
+                      value={member.role}
+                      onChange={(e) => updateMember(member.id, { role: e.target.value })}
+                    >
+                      {ROLES.map(role => (
+                        <option key={role} value={role}>{role}</option>
+                      ))}
+                      {!ROLES.includes(member.role) && (
+                        <option value={member.role}>{member.role} (Atual)</option>
+                      )}
+                    </select>
+                  </div>
+
+                  <div className="flex items-center justify-between mt-1 px-1">
+                    <span className="text-xs font-bold theme-text-secondary">Acesso à Plataforma</span>
+                    <button
+                      className={`relative w-12 h-6 rounded-full transition-colors duration-300 ${member.platformAccess !== false ? 'bg-accent-primary' : 'bg-gray-300 dark:bg-gray-700'}`}
+                      onClick={() => updateMember(member.id, { platformAccess: member.platformAccess === false ? true : false })}
+                    >
+                      <span
+                        className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform duration-300 shadow-sm ${member.platformAccess !== false ? 'translate-x-6' : 'translate-x-0'}`}
+                      />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* System Health Section */}
         <section className="lg:col-span-12 glass-card rounded-[32px] sm:rounded-[40px] p-6 sm:p-10 shadow-ambient theme-border-strong mb-12 w-full min-w-0">
