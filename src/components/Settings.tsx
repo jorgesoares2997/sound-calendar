@@ -17,6 +17,7 @@ const PREVIEW_MEMBER: Member = {
   phone: '',
   color: '#3e5e82',
   active: true,
+  platformAccess: true,
 };
 
 const PREVIEW_SHIFT: Shift = {
