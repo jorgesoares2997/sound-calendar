@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import type { Shift, Member, AppSettings, ShiftType } from '@/types';
 import { getEnvConfigStatusAction } from '@/app/actions/telegram';
-import { buildReminderMessage } from '@/utils/telegram';
+import { buildReminderMessage, sendTelegramMessage } from '@/utils/telegram';
 import { useAppStore } from '@/components/Providers';
 import { usePermissions } from '@/store/authStore';
 import { AddShiftModal } from './AddShiftModal';
